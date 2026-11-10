@@ -7,7 +7,8 @@ export type MilestoneStatus =
   | 'passed'
   | 'failed'
   | 'released'
-  | 'rejected';
+  | 'rejected'
+  | 'refunded';
 
 export interface MilestoneCheckConfig {
   repo?: string;
@@ -27,6 +28,8 @@ export interface Milestone {
   check_config: MilestoneCheckConfig;
   submission: string | null;
   status: MilestoneStatus;
+  due_at?: string | null;
+  payout_status?: string | null;
   evidence: any | null;
   ai_summary: string | null;
   capture_id: string | null;
@@ -50,6 +53,7 @@ export interface Contract {
   currency: string;
   total: string;
   status: ContractStatus;
+  created_via?: 'mcp' | 'web' | string;
   paypal_order_id: string | null;
   authorization_id: string | null;
   created_at: string;
@@ -73,6 +77,7 @@ export interface DraftMilestone {
   check_type: 'github_ci' | 'http' | 'manual';
   check_config: Record<string, any>;
   acceptance: string;
+  due_at?: string;
 }
 
 export interface DraftContractResponse {

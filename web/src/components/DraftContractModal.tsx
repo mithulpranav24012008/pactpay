@@ -430,6 +430,22 @@ export const DraftContractModal: React.FC<DraftContractModalProps> = ({
                       />
                     </div>
                   )}
+
+                  {/* Due Date & Time Picker */}
+                  <div className="pt-1 border-t border-slate-800/60 mt-2">
+                    <label className="block text-[10px] uppercase font-bold text-slate-400 mb-0.5">
+                      Deadline / Due Date (Optional auto-refund)
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={m.due_at ? m.due_at.slice(0, 16) : ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        handleUpdateMilestone(idx, 'due_at', val ? new Date(val).toISOString() : undefined);
+                      }}
+                      className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-cyan-300 font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
               ))}
             </div>

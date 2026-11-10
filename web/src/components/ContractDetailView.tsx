@@ -209,16 +209,36 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
   const handleFetchPayoutStatus = async (milestoneId: string) => {
     setLoadingPayoutStatusId(milestoneId);
     try {
-      const res = await fetch(`/api/milestones/${milestoneId}/payout-status`);
+      const res = await fetch(`/api/milestones/${milestoneId}/payout-status`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        setPayoutStatusMap((prev) => ({ ...prev, [milestoneId]: data }));
+        const st = data.payout_status || data.transaction_status;
+        setPayoutStatusMap((prev) => ({ ...prev, [milestoneId]: st }));
+        onRefresh();
       }
     } catch (e) {
       console.error('Error fetching payout status:', e);
     } finally {
       setLoadingPayoutStatusId(null);
     }
+  };
+
+  const formatDeadline = (dueAt?: string | null) => {
+    if (!dueAt) return null;
+    const due = new Date(dueAt).getTime();
+    const now = Date.now();
+    const diffMs = due - now;
+
+    if (diffMs <= 0) {
+      return { text: 'Overdue (Expired)', isExpired: true };
+    }
+    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    if (diffHrs > 24) {
+      const days = Math.floor(diffHrs / 24);
+      return { text: `${days}d left`, isExpired: false };
+    }
+    return { text: `${diffHrs}h ${diffMins}m left`, isExpired: false };
   };
 
   return (
@@ -233,6 +253,11 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
             <span className="text-xs uppercase font-bold text-slate-400">
               {contract.status.replace('_', ' ')}
             </span>
+            {contract.created_via === 'mcp' && (
+              <span className="text-[11px] font-bold uppercase tracking-wider bg-purple-950/70 border border-purple-500/40 text-purple-300 px-2 py-0.5 rounded">
+                ⚡ Agent (MCP)
+              </span>
+            )}
           </div>
           <h2 className="text-xl font-bold text-white mt-1">{contract.title}</h2>
           <p className="text-xs text-slate-400 mt-0.5">{contract.description}</p>
@@ -346,6 +371,26 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
                 </div>
 
                 <div className="flex items-center space-x-3">
+                  {milestone.due_at && (
+                    (() => {
+                      const dl = formatDeadline(milestone.due_at);
+                      if (!dl) return null;
+                      return (
+                        <div
+                          className={`flex items-center space-x-1 text-xs px-2 py-0.5 rounded font-mono ${
+                            dl.isExpired || milestone.status === 'refunded'
+                              ? 'bg-rose-950/70 border border-rose-500/40 text-rose-300'
+                              : 'bg-amber-950/50 border border-amber-500/30 text-amber-300'
+                          }`}
+                          title={`Due: ${new Date(milestone.due_at).toLocaleString()}`}
+                        >
+                          <Clock className="w-3 h-3" />
+                          <span>{milestone.status === 'refunded' ? 'Overdue → Refunded' : dl.text}</span>
+                        </div>
+                      );
+                    })()
+                  )}
+
                   <span className="font-mono font-bold text-slate-100 text-sm">
                     ${parseFloat(milestone.amount).toFixed(2)} USD
                   </span>
@@ -359,6 +404,8 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
                         ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
                         : milestone.status === 'rejected'
                         ? 'bg-red-500/15 text-red-400 border-red-500/30'
+                        : milestone.status === 'refunded'
+                        ? 'bg-orange-500/15 text-orange-400 border-orange-500/30'
                         : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
                     }`}
                   >
@@ -464,21 +511,45 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
 
                   {milestone.payout_batch_id && (
                     <div className="flex items-center space-x-2">
-                      {payoutStatusMap[milestone.id] ? (
-                        <div className="flex items-center space-x-1.5 bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded text-[11px] font-bold">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                          <span>PayPal Status: {payoutStatusMap[milestone.id].transaction_status}</span>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleFetchPayoutStatus(milestone.id)}
-                          disabled={loadingPayoutStatusId === milestone.id}
-                          className="px-2.5 py-1 text-[11px] font-semibold bg-cyan-950/60 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-800/60 rounded flex items-center space-x-1 transition"
-                        >
-                          <Activity className="w-3 h-3 text-cyan-400" />
-                          <span>{loadingPayoutStatusId === milestone.id ? 'Verifying...' : 'Verify PayPal Receipt'}</span>
-                        </button>
-                      )}
+                      {(() => {
+                        const st = payoutStatusMap[milestone.id] || milestone.payout_status;
+                        if (!st) {
+                          return (
+                            <button
+                              onClick={() => handleFetchPayoutStatus(milestone.id)}
+                              disabled={loadingPayoutStatusId === milestone.id}
+                              className="px-2.5 py-1 text-[11px] font-semibold bg-cyan-950/60 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-800/60 rounded flex items-center space-x-1 transition"
+                            >
+                              <Activity className="w-3 h-3 text-cyan-400" />
+                              <span>{loadingPayoutStatusId === milestone.id ? 'Verifying...' : 'Verify PayPal Receipt'}</span>
+                            </button>
+                          );
+                        }
+
+                        const isSuccess = st === 'SUCCESS';
+                        return (
+                          <div className="flex items-center space-x-2">
+                            <div
+                              className={`flex items-center space-x-1.5 px-2 py-0.5 rounded text-[11px] font-bold border ${
+                                isSuccess
+                                  ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300'
+                                  : 'bg-amber-950/70 border-amber-500/40 text-amber-300'
+                              }`}
+                            >
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>{isSuccess ? 'Paid ✓ confirmed by PayPal' : `PayPal: ${st}`}</span>
+                            </div>
+                            <button
+                              onClick={() => handleFetchPayoutStatus(milestone.id)}
+                              disabled={loadingPayoutStatusId === milestone.id}
+                              className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition"
+                              title="Refresh PayPal Payout Status"
+                            >
+                              <RotateCw className={`w-3 h-3 ${loadingPayoutStatusId === milestone.id ? 'animate-spin' : ''}`} />
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

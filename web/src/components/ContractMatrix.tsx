@@ -35,7 +35,14 @@ export const ContractMatrix: React.FC<ContractMatrixProps> = ({
       flex: 2,
       cellRenderer: (params: any) => (
         <div className="flex flex-col justify-center h-full py-1">
-          <span className="font-semibold text-white truncate">{params.value}</span>
+          <div className="flex items-center space-x-2">
+            <span className="font-semibold text-white truncate">{params.value}</span>
+            {params.data?.created_via === 'mcp' && (
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-purple-950/70 border border-purple-500/40 text-purple-300 px-1.5 py-0.5 rounded">
+                ⚡ Agent (MCP)
+              </span>
+            )}
+          </div>
           <span className="text-xs text-slate-400 truncate">{params.data?.description}</span>
         </div>
       ),
