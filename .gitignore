@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.db
+pactpay_state.json
+.env
+node_modules/
+.DS_Store
+.venv
+venv/
