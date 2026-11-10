@@ -116,6 +116,15 @@ The agent can post a job, hand a human the PayPal approval link, submit work and
 - Each milestone can have a deadline (`due_at`). If nothing has passed by then, PactPay rejects it automatically and that share goes back to the client (the remaining PayPal authorization is voided when the contract closes).
 - After a payout, PactPay keeps asking PayPal until the payout is final (`SUCCESS`, `UNCLAIMED`, `FAILED`…) and shows the confirmed state.
 
+## 🧪 Try the API (OpenAPI + Postman)
+- [`docs/openapi.yaml`](docs/openapi.yaml): full OpenAPI 3 spec of the PactPay API (validated with Redocly).
+- [`docs/pactpay.postman_collection.json`](docs/pactpay.postman_collection.json): import into **Postman** (File → Import) to call every endpoint with example bodies; `baseUrl` defaults to `http://localhost:4000`. Also runs headless: `npx newman run docs/pactpay.postman_collection.json --folder System`.
+
+## Known limitations
+- The API has no authentication: it is a local demo for judging. A production version would authenticate clients and workers and scope overrides to the client.
+- PayPal authorizations are honored for 3 days; milestones captured later may need re-authorization.
+- A "partial settlement" AI recommendation is advisory; there is no one-click partial release yet.
+
 ## 🚀 Run it locally (about 5 minutes)
 
 **Needs:** Node.js 22.5+ (uses the built-in `node:sqlite`), a free PayPal developer account, and a free Gemini API key.

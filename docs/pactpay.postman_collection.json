@@ -1,0 +1,1836 @@
+{
+  "item": [
+    {
+      "name": "Agent",
+      "description": "",
+      "item": [
+        {
+          "id": "601d4d89-d15f-4d8c-b9a0-76597cee8969",
+          "name": "Draft a contract from a plain-English brief (Gemini)",
+          "request": {
+            "name": "Draft a contract from a plain-English brief (Gemini)",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "agent",
+                "draft"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"brief\": \"<string>\",\n  \"budget\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "9fac54a6-2f76-4fbb-a8f2-39268973c38c",
+              "name": "Draft contract (nothing is created yet)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "agent",
+                    "draft"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"brief\": \"<string>\",\n  \"budget\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"currency\": \"<string>\",\n  \"milestones\": [\n    {\n      \"title\": \"<string>\",\n      \"amount\": \"4524.7\",\n      \"check_type\": \"http\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"acceptance\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    },\n    {\n      \"title\": \"<string>\",\n      \"amount\": \"460482437.3\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"acceptance\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contracts",
+      "description": "",
+      "item": [
+        {
+          "id": "94dff5f5-0e33-41df-94be-c8c5289c290a",
+          "name": "List contracts, newest first",
+          "request": {
+            "name": "List contracts, newest first",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "contracts"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "6be15570-4922-4bfd-9fcc-b5b16d68494c",
+              "name": "Contracts",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "contracts"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"<string>\",\n    \"title\": \"<string>\",\n    \"description\": \"<string>\",\n    \"client_name\": \"<string>\",\n    \"worker_name\": \"<string>\",\n    \"worker_paypal_email\": \"<string>\",\n    \"currency\": \"<string>\",\n    \"total\": \"<string>\",\n    \"status\": \"funded\",\n    \"created_via\": \"web\",\n    \"paypal_order_id\": \"<string>\",\n    \"authorization_id\": \"<string>\",\n    \"totals\": {\n      \"released\": \"<string>\",\n      \"held\": \"<string>\",\n      \"returned\": \"<string>\"\n    },\n    \"milestones\": [\n      {\n        \"id\": \"<string>\",\n        \"position\": \"<integer>\",\n        \"title\": \"<string>\",\n        \"amount\": \"<string>\",\n        \"check_type\": \"github_ci\",\n        \"check_config\": {\n          \"repo\": \"<string>\",\n          \"require_merged\": \"<boolean>\",\n          \"url\": \"<string>\",\n          \"expect_status\": \"<integer>\",\n          \"expect_text\": \"<string>\"\n        },\n        \"submission\": \"<string>\",\n        \"status\": \"verifying\",\n        \"evidence\": {},\n        \"ai_summary\": \"<string>\",\n        \"capture_id\": \"<string>\",\n        \"payout_batch_id\": \"<string>\",\n        \"payout_status\": \"<string>\",\n        \"due_at\": \"<dateTime>\"\n      },\n      {\n        \"id\": \"<string>\",\n        \"position\": \"<integer>\",\n        \"title\": \"<string>\",\n        \"amount\": \"<string>\",\n        \"check_type\": \"manual\",\n        \"check_config\": {\n          \"repo\": \"<string>\",\n          \"require_merged\": \"<boolean>\",\n          \"url\": \"<string>\",\n          \"expect_status\": \"<integer>\",\n          \"expect_text\": \"<string>\"\n        },\n        \"submission\": \"<string>\",\n        \"status\": \"submitted\",\n        \"evidence\": {},\n        \"ai_summary\": \"<string>\",\n        \"capture_id\": \"<string>\",\n        \"payout_batch_id\": \"<string>\",\n        \"payout_status\": \"<string>\",\n        \"due_at\": \"<dateTime>\"\n      }\n    ]\n  },\n  {\n    \"id\": \"<string>\",\n    \"title\": \"<string>\",\n    \"description\": \"<string>\",\n    \"client_name\": \"<string>\",\n    \"worker_name\": \"<string>\",\n    \"worker_paypal_email\": \"<string>\",\n    \"currency\": \"<string>\",\n    \"total\": \"<string>\",\n    \"status\": \"cancelled\",\n    \"created_via\": \"mcp\",\n    \"paypal_order_id\": \"<string>\",\n    \"authorization_id\": \"<string>\",\n    \"totals\": {\n      \"released\": \"<string>\",\n      \"held\": \"<string>\",\n      \"returned\": \"<string>\"\n    },\n    \"milestones\": [\n      {\n        \"id\": \"<string>\",\n        \"position\": \"<integer>\",\n        \"title\": \"<string>\",\n        \"amount\": \"<string>\",\n        \"check_type\": \"manual\",\n        \"check_config\": {\n          \"repo\": \"<string>\",\n          \"require_merged\": \"<boolean>\",\n          \"url\": \"<string>\",\n          \"expect_status\": \"<integer>\",\n          \"expect_text\": \"<string>\"\n        },\n        \"submission\": \"<string>\",\n        \"status\": \"pending\",\n        \"evidence\": {},\n        \"ai_summary\": \"<string>\",\n        \"capture_id\": \"<string>\",\n        \"payout_batch_id\": \"<string>\",\n        \"payout_status\": \"<string>\",\n        \"due_at\": \"<dateTime>\"\n      },\n      {\n        \"id\": \"<string>\",\n        \"position\": \"<integer>\",\n        \"title\": \"<string>\",\n        \"amount\": \"<string>\",\n        \"check_type\": \"github_ci\",\n        \"check_config\": {\n          \"repo\": \"<string>\",\n          \"require_merged\": \"<boolean>\",\n          \"url\": \"<string>\",\n          \"expect_status\": \"<integer>\",\n          \"expect_text\": \"<string>\"\n        },\n        \"submission\": \"<string>\",\n        \"status\": \"failed\",\n        \"evidence\": {},\n        \"ai_summary\": \"<string>\",\n        \"capture_id\": \"<string>\",\n        \"payout_batch_id\": \"<string>\",\n        \"payout_status\": \"<string>\",\n        \"due_at\": \"<dateTime>\"\n      }\n    ]\n  }\n]",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "98f02a1b-f845-482a-b479-f5a7386293a1",
+          "name": "Create a contract",
+          "request": {
+            "name": "Create a contract",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "contracts"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"currency\": \"<string>\",\n  \"milestones\": [\n    {\n      \"title\": \"<string>\",\n      \"amount\": \"5231\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"acceptance\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    },\n    {\n      \"title\": \"<string>\",\n      \"amount\": \"9043\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"acceptance\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    }\n  ],\n  \"client_name\": \"<string>\",\n  \"worker_name\": \"<string>\",\n  \"worker_paypal_email\": \"<email>\",\n  \"created_via\": \"mcp\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "25400e3c-f514-43e1-8085-b00c45462c35",
+              "name": "Created contract (status draft)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "contracts"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"currency\": \"<string>\",\n  \"milestones\": [\n    {\n      \"title\": \"<string>\",\n      \"amount\": \"5231\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"acceptance\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    },\n    {\n      \"title\": \"<string>\",\n      \"amount\": \"9043\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"acceptance\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    }\n  ],\n  \"client_name\": \"<string>\",\n  \"worker_name\": \"<string>\",\n  \"worker_paypal_email\": \"<email>\",\n  \"created_via\": \"mcp\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"client_name\": \"<string>\",\n  \"worker_name\": \"<string>\",\n  \"worker_paypal_email\": \"<string>\",\n  \"currency\": \"<string>\",\n  \"total\": \"<string>\",\n  \"status\": \"awaiting_payment\",\n  \"created_via\": \"mcp\",\n  \"paypal_order_id\": \"<string>\",\n  \"authorization_id\": \"<string>\",\n  \"totals\": {\n    \"released\": \"<string>\",\n    \"held\": \"<string>\",\n    \"returned\": \"<string>\"\n  },\n  \"milestones\": [\n    {\n      \"id\": \"<string>\",\n      \"position\": \"<integer>\",\n      \"title\": \"<string>\",\n      \"amount\": \"<string>\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"submission\": \"<string>\",\n      \"status\": \"pending\",\n      \"evidence\": {},\n      \"ai_summary\": \"<string>\",\n      \"capture_id\": \"<string>\",\n      \"payout_batch_id\": \"<string>\",\n      \"payout_status\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    },\n    {\n      \"id\": \"<string>\",\n      \"position\": \"<integer>\",\n      \"title\": \"<string>\",\n      \"amount\": \"<string>\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"submission\": \"<string>\",\n      \"status\": \"rejected\",\n      \"evidence\": {},\n      \"ai_summary\": \"<string>\",\n      \"capture_id\": \"<string>\",\n      \"payout_batch_id\": \"<string>\",\n      \"payout_status\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "6ac4a150-a4da-43dc-81f7-3943a31d6bdb",
+              "name": "Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "contracts"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"currency\": \"<string>\",\n  \"milestones\": [\n    {\n      \"title\": \"<string>\",\n      \"amount\": \"5231\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"acceptance\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    },\n    {\n      \"title\": \"<string>\",\n      \"amount\": \"9043\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"acceptance\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    }\n  ],\n  \"client_name\": \"<string>\",\n  \"worker_name\": \"<string>\",\n  \"worker_paypal_email\": \"<email>\",\n  \"created_via\": \"mcp\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"<string>\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "b945b114-cfae-493f-a86b-3e2e5ee3bbae",
+          "name": "Get one contract with its milestones and totals",
+          "request": {
+            "name": "Get one contract with its milestones and totals",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "contracts",
+                ":id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "2d6736bd-a615-4f86-a265-38bd18f73ef5",
+              "name": "Contract",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "contracts",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"client_name\": \"<string>\",\n  \"worker_name\": \"<string>\",\n  \"worker_paypal_email\": \"<string>\",\n  \"currency\": \"<string>\",\n  \"total\": \"<string>\",\n  \"status\": \"awaiting_payment\",\n  \"created_via\": \"mcp\",\n  \"paypal_order_id\": \"<string>\",\n  \"authorization_id\": \"<string>\",\n  \"totals\": {\n    \"released\": \"<string>\",\n    \"held\": \"<string>\",\n    \"returned\": \"<string>\"\n  },\n  \"milestones\": [\n    {\n      \"id\": \"<string>\",\n      \"position\": \"<integer>\",\n      \"title\": \"<string>\",\n      \"amount\": \"<string>\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"submission\": \"<string>\",\n      \"status\": \"pending\",\n      \"evidence\": {},\n      \"ai_summary\": \"<string>\",\n      \"capture_id\": \"<string>\",\n      \"payout_batch_id\": \"<string>\",\n      \"payout_status\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    },\n    {\n      \"id\": \"<string>\",\n      \"position\": \"<integer>\",\n      \"title\": \"<string>\",\n      \"amount\": \"<string>\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"submission\": \"<string>\",\n      \"status\": \"rejected\",\n      \"evidence\": {},\n      \"ai_summary\": \"<string>\",\n      \"capture_id\": \"<string>\",\n      \"payout_batch_id\": \"<string>\",\n      \"payout_status\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "c549f74c-79a4-4d9c-86c5-0f7c71610f92",
+              "name": "Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "contracts",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"<string>\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "b6bc1b94-5f80-4684-89e1-a0ececce22f3",
+          "name": "Audit log for one contract (newest first)",
+          "request": {
+            "name": "Audit log for one contract (newest first)",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "contracts",
+                ":id",
+                "events"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "756bd121-ab15-4b28-a34e-84a34d17f1b8",
+              "name": "Events",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "contracts",
+                    ":id",
+                    "events"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"<integer>\",\n    \"contract_id\": \"<string>\",\n    \"milestone_id\": \"<string>\",\n    \"kind\": \"<string>\",\n    \"message\": \"<string>\",\n    \"data\": \"<string>\",\n    \"created_at\": \"<string>\"\n  },\n  {\n    \"id\": \"<integer>\",\n    \"contract_id\": \"<string>\",\n    \"milestone_id\": \"<string>\",\n    \"kind\": \"<string>\",\n    \"message\": \"<string>\",\n    \"data\": \"<string>\",\n    \"created_at\": \"<string>\"\n  }\n]",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "eb1b00ea-8ddc-4993-a79e-e969ab5bc977",
+          "name": "Start funding \u2014 returns the PayPal approval link",
+          "request": {
+            "name": "Start funding \u2014 returns the PayPal approval link",
+            "description": {
+              "content": "Creates a PayPal order with intent AUTHORIZE. Send the client to approveUrl; after approval PayPal returns to /api/paypal/return, which authorizes (holds) the funds.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "contracts",
+                ":id",
+                "fund"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {},
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "43de415c-7c1b-462d-ab60-de222e66cec4",
+              "name": "PayPal order",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "contracts",
+                    ":id",
+                    "fund"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"orderId\": \"<string>\",\n  \"approveUrl\": \"<uri>\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "f82ed5f7-8f94-4c39-b153-00fb72c9e760",
+              "name": "Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "contracts",
+                    ":id",
+                    "fund"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"<string>\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "7a52910d-74be-498e-a6ed-f60d7d13f8aa",
+              "name": "Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "contracts",
+                    ":id",
+                    "fund"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Bad Gateway",
+              "code": 502,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"<string>\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "682dac0d-9dcb-47f3-a135-9002b843123e",
+          "name": "PayPal return URL (browser redirect target)",
+          "request": {
+            "name": "PayPal return URL (browser redirect target)",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "paypal",
+                "return"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  },
+                  "key": "contract",
+                  "value": "<string>"
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET",
+            "body": {},
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "580863d0-9622-4d88-8020-d7659121bc8c",
+              "name": "Redirects to the dashboard with funded=1 or fund_error=1",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "paypal",
+                    "return"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "key": "contract",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Found",
+              "code": 302,
+              "header": [],
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Milestones",
+      "description": "",
+      "item": [
+        {
+          "id": "6fa0733b-f7d7-4ebb-833e-4ed3520bf724",
+          "name": "Submit work and verify it",
+          "request": {
+            "name": "Submit work and verify it",
+            "description": {
+              "content": "Runs the milestone's check. On pass, captures the milestone's share and pays the worker via PayPal Payouts. On fail, money stays held.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "milestones",
+                ":id",
+                "submit"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"submission\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "b14219bb-7dfb-4675-9e2f-3a796f388049",
+              "name": "Check result, AI explanation and updated contract",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "milestones",
+                    ":id",
+                    "submit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"submission\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"result\": {\n    \"passed\": \"<boolean>\",\n    \"summary\": \"<string>\",\n    \"evidence\": \"\"\n  },\n  \"explanation\": \"<string>\",\n  \"contract\": {\n    \"id\": \"<string>\",\n    \"title\": \"<string>\",\n    \"description\": \"<string>\",\n    \"client_name\": \"<string>\",\n    \"worker_name\": \"<string>\",\n    \"worker_paypal_email\": \"<string>\",\n    \"currency\": \"<string>\",\n    \"total\": \"<string>\",\n    \"status\": \"completed\",\n    \"created_via\": \"mcp\",\n    \"paypal_order_id\": \"<string>\",\n    \"authorization_id\": \"<string>\",\n    \"totals\": {\n      \"released\": \"<string>\",\n      \"held\": \"<string>\",\n      \"returned\": \"<string>\"\n    },\n    \"milestones\": [\n      {\n        \"id\": \"<string>\",\n        \"position\": \"<integer>\",\n        \"title\": \"<string>\",\n        \"amount\": \"<string>\",\n        \"check_type\": \"manual\",\n        \"check_config\": {\n          \"repo\": \"<string>\",\n          \"require_merged\": \"<boolean>\",\n          \"url\": \"<string>\",\n          \"expect_status\": \"<integer>\",\n          \"expect_text\": \"<string>\"\n        },\n        \"submission\": \"<string>\",\n        \"status\": \"pending\",\n        \"evidence\": {},\n        \"ai_summary\": \"<string>\",\n        \"capture_id\": \"<string>\",\n        \"payout_batch_id\": \"<string>\",\n        \"payout_status\": \"<string>\",\n        \"due_at\": \"<dateTime>\"\n      },\n      {\n        \"id\": \"<string>\",\n        \"position\": \"<integer>\",\n        \"title\": \"<string>\",\n        \"amount\": \"<string>\",\n        \"check_type\": \"github_ci\",\n        \"check_config\": {\n          \"repo\": \"<string>\",\n          \"require_merged\": \"<boolean>\",\n          \"url\": \"<string>\",\n          \"expect_status\": \"<integer>\",\n          \"expect_text\": \"<string>\"\n        },\n        \"submission\": \"<string>\",\n        \"status\": \"pending\",\n        \"evidence\": {},\n        \"ai_summary\": \"<string>\",\n        \"capture_id\": \"<string>\",\n        \"payout_batch_id\": \"<string>\",\n        \"payout_status\": \"<string>\",\n        \"due_at\": \"<dateTime>\"\n      }\n    ]\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "98e2fa3c-f680-42d4-9117-593a81bf97c2",
+              "name": "Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "milestones",
+                    ":id",
+                    "submit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"submission\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"<string>\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "0617b467-1f3c-42f9-8140-c51c072efff4",
+          "name": "Re-run the check (or retry only the payout if money is already captured)",
+          "request": {
+            "name": "Re-run the check (or retry only the payout if money is already captured)",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "milestones",
+                ":id",
+                "verify"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {},
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "4685e081-8791-4264-8d12-d039cdb395de",
+              "name": "Check result, AI explanation and updated contract",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "milestones",
+                    ":id",
+                    "verify"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"result\": {\n    \"passed\": \"<boolean>\",\n    \"summary\": \"<string>\",\n    \"evidence\": \"\"\n  },\n  \"explanation\": \"<string>\",\n  \"contract\": {\n    \"id\": \"<string>\",\n    \"title\": \"<string>\",\n    \"description\": \"<string>\",\n    \"client_name\": \"<string>\",\n    \"worker_name\": \"<string>\",\n    \"worker_paypal_email\": \"<string>\",\n    \"currency\": \"<string>\",\n    \"total\": \"<string>\",\n    \"status\": \"completed\",\n    \"created_via\": \"mcp\",\n    \"paypal_order_id\": \"<string>\",\n    \"authorization_id\": \"<string>\",\n    \"totals\": {\n      \"released\": \"<string>\",\n      \"held\": \"<string>\",\n      \"returned\": \"<string>\"\n    },\n    \"milestones\": [\n      {\n        \"id\": \"<string>\",\n        \"position\": \"<integer>\",\n        \"title\": \"<string>\",\n        \"amount\": \"<string>\",\n        \"check_type\": \"manual\",\n        \"check_config\": {\n          \"repo\": \"<string>\",\n          \"require_merged\": \"<boolean>\",\n          \"url\": \"<string>\",\n          \"expect_status\": \"<integer>\",\n          \"expect_text\": \"<string>\"\n        },\n        \"submission\": \"<string>\",\n        \"status\": \"pending\",\n        \"evidence\": {},\n        \"ai_summary\": \"<string>\",\n        \"capture_id\": \"<string>\",\n        \"payout_batch_id\": \"<string>\",\n        \"payout_status\": \"<string>\",\n        \"due_at\": \"<dateTime>\"\n      },\n      {\n        \"id\": \"<string>\",\n        \"position\": \"<integer>\",\n        \"title\": \"<string>\",\n        \"amount\": \"<string>\",\n        \"check_type\": \"github_ci\",\n        \"check_config\": {\n          \"repo\": \"<string>\",\n          \"require_merged\": \"<boolean>\",\n          \"url\": \"<string>\",\n          \"expect_status\": \"<integer>\",\n          \"expect_text\": \"<string>\"\n        },\n        \"submission\": \"<string>\",\n        \"status\": \"pending\",\n        \"evidence\": {},\n        \"ai_summary\": \"<string>\",\n        \"capture_id\": \"<string>\",\n        \"payout_batch_id\": \"<string>\",\n        \"payout_status\": \"<string>\",\n        \"due_at\": \"<dateTime>\"\n      }\n    ]\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9c220507-0aca-4c11-a0d3-d7488bea73fd",
+              "name": "Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "milestones",
+                    ":id",
+                    "verify"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"<string>\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "71aea9c0-fe41-4c85-85d1-95633777264c",
+          "name": "Client override \u2014 release anyway, or reject and get the share back",
+          "request": {
+            "name": "Client override \u2014 release anyway, or reject and get the share back",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "milestones",
+                ":id",
+                "override"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"reject\",\n  \"reason\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "530fe66d-9dc4-4138-ab6c-ab6b45207271",
+              "name": "Updated contract",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "milestones",
+                    ":id",
+                    "override"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"action\": \"reject\",\n  \"reason\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"client_name\": \"<string>\",\n  \"worker_name\": \"<string>\",\n  \"worker_paypal_email\": \"<string>\",\n  \"currency\": \"<string>\",\n  \"total\": \"<string>\",\n  \"status\": \"awaiting_payment\",\n  \"created_via\": \"mcp\",\n  \"paypal_order_id\": \"<string>\",\n  \"authorization_id\": \"<string>\",\n  \"totals\": {\n    \"released\": \"<string>\",\n    \"held\": \"<string>\",\n    \"returned\": \"<string>\"\n  },\n  \"milestones\": [\n    {\n      \"id\": \"<string>\",\n      \"position\": \"<integer>\",\n      \"title\": \"<string>\",\n      \"amount\": \"<string>\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"submission\": \"<string>\",\n      \"status\": \"pending\",\n      \"evidence\": {},\n      \"ai_summary\": \"<string>\",\n      \"capture_id\": \"<string>\",\n      \"payout_batch_id\": \"<string>\",\n      \"payout_status\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    },\n    {\n      \"id\": \"<string>\",\n      \"position\": \"<integer>\",\n      \"title\": \"<string>\",\n      \"amount\": \"<string>\",\n      \"check_type\": \"github_ci\",\n      \"check_config\": {\n        \"repo\": \"<string>\",\n        \"require_merged\": \"<boolean>\",\n        \"url\": \"<string>\",\n        \"expect_status\": \"<integer>\",\n        \"expect_text\": \"<string>\"\n      },\n      \"submission\": \"<string>\",\n      \"status\": \"rejected\",\n      \"evidence\": {},\n      \"ai_summary\": \"<string>\",\n      \"capture_id\": \"<string>\",\n      \"payout_batch_id\": \"<string>\",\n      \"payout_status\": \"<string>\",\n      \"due_at\": \"<dateTime>\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b3d16e06-afb0-4072-9dff-71d8d59d0293",
+              "name": "Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "milestones",
+                    ":id",
+                    "override"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"action\": \"reject\",\n  \"reason\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"<string>\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "071b3d2c-37e1-445a-809d-f4661a5e9e94",
+          "name": "AI dispute recommendation (advisory only; moves no money)",
+          "request": {
+            "name": "AI dispute recommendation (advisory only; moves no money)",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "milestones",
+                ":id",
+                "dispute"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"statement\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "9cc008ac-655f-4b42-aafc-c8920448329f",
+              "name": "Recommendation",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "milestones",
+                    ":id",
+                    "dispute"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"statement\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"recommendation\": \"partial_settlement\",\n  \"recommended_split_pct\": \"<number>\",\n  \"verdict_summary\": \"<string>\",\n  \"detailed_analysis\": \"<string>\",\n  \"action_plan\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "6b28943e-349b-4067-bcc4-6bb5ab5a130e",
+          "name": "Live payout batch details from PayPal",
+          "request": {
+            "name": "Live payout batch details from PayPal",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "milestones",
+                ":id",
+                "payout-status"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "87b4691a-9430-4a04-95fb-c2abac892ba2",
+              "name": "Payout batch",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "milestones",
+                    ":id",
+                    "payout-status"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"batch_id\": \"<string>\",\n  \"batch_status\": \"<string>\",\n  \"transaction_status\": \"<string>\",\n  \"fee\": \"<string>\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "be64ecb6-b5a8-4ca2-98dd-ec4b54bfa2df",
+          "name": "Refresh and store the payout status",
+          "request": {
+            "name": "Refresh and store the payout status",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "milestones",
+                ":id",
+                "payout-status"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "id",
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) ",
+                    "type": "text/plain"
+                  }
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {},
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "8948de8b-d9f6-4cb5-b81c-d7ab758f88a6",
+              "name": "Stored status",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "milestones",
+                    ":id",
+                    "payout-status"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "id"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"payout_status\": \"<string>\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "description": "",
+      "item": [
+        {
+          "id": "ccf5c55d-29fc-43de-9f44-282a106807db",
+          "name": "Health and configuration",
+          "request": {
+            "name": "Health and configuration",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "health"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "468030fe-070e-4a68-a586-0004f6e5f840",
+              "name": "Which integrations are configured",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "health"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ok\": \"<boolean>\",\n  \"paypal\": \"<boolean>\",\n  \"ai\": \"<boolean>\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "fb9f7312-1188-4aa3-ac30-958907d4160f",
+          "name": "Audit log across all contracts (latest 200)",
+          "request": {
+            "name": "Audit log across all contracts (latest 200)",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "events"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "c89111fe-9e96-4e53-8dea-1c8af70b5272",
+              "name": "Events",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "events"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"<integer>\",\n    \"contract_id\": \"<string>\",\n    \"milestone_id\": \"<string>\",\n    \"kind\": \"<string>\",\n    \"message\": \"<string>\",\n    \"data\": \"<string>\",\n    \"created_at\": \"<string>\"\n  },\n  {\n    \"id\": \"<integer>\",\n    \"contract_id\": \"<string>\",\n    \"milestone_id\": \"<string>\",\n    \"kind\": \"<string>\",\n    \"message\": \"<string>\",\n    \"data\": \"<string>\",\n    \"created_at\": \"<string>\"\n  }\n]",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    }
+  ],
+  "info": {
+    "_postman_id": "ef8639ff-14bf-4700-92ac-17686dd93689",
+    "name": "PactPay API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Milestone escrow on PayPal. A client funds a contract (PayPal Orders, intent AUTHORIZE),\neach milestone is released only when a machine-checkable test passes (partial capture +\nPayPal Payouts), and anything not earned is returned by voiding the authorization.\nThe AI (Gemini) drafts contracts and explains results; it never decides whether money moves.\n",
+      "type": "text/plain"
+    }
+  }
+}

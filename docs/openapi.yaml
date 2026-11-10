@@ -1,0 +1,355 @@
+openapi: 3.0.3
+info:
+  title: PactPay API
+  version: 1.0.0
+  description: |
+    Milestone escrow on PayPal. A client funds a contract (PayPal Orders, intent AUTHORIZE),
+    each milestone is released only when a machine-checkable test passes (partial capture +
+    PayPal Payouts), and anything not earned is returned by voiding the authorization.
+    The AI (Gemini) drafts contracts and explains results; it never decides whether money moves.
+  license:
+    name: MIT
+# Local demo API: no authentication (see README, Known limitations).
+security: []
+servers:
+  - url: http://localhost:4000
+tags:
+  - name: Agent
+  - name: Contracts
+  - name: Milestones
+  - name: System
+paths:
+  /api/health:
+    get:
+      tags: [System]
+      summary: Health and configuration
+      responses:
+        "200":
+          description: Which integrations are configured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  paypal: { type: boolean }
+                  ai: { type: boolean }
+  /api/agent/draft:
+    post:
+      tags: [Agent]
+      summary: Draft a contract from a plain-English brief (Gemini)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [brief, budget]
+              properties:
+                brief: { type: string, minLength: 10, example: "Implement slugify() in github.com/mithulpranav24012008/pactpay-demo-job with passing CI, then deploy a status page at https://example.com that answers 200." }
+                budget: { type: string, example: "100 USD" }
+      responses:
+        "200":
+          description: Draft contract (nothing is created yet)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContractDraft" }
+  /api/contracts:
+    get:
+      tags: [Contracts]
+      summary: List contracts, newest first
+      responses:
+        "200":
+          description: Contracts
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Contract" } }
+    post:
+      tags: [Contracts]
+      summary: Create a contract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateContract" }
+      responses:
+        "201":
+          description: Created contract (status draft)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contract" }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/contracts/{id}:
+    parameters: [{ $ref: "#/components/parameters/ContractId" }]
+    get:
+      tags: [Contracts]
+      summary: Get one contract with its milestones and totals
+      responses:
+        "200":
+          description: Contract
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contract" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/contracts/{id}/events:
+    parameters: [{ $ref: "#/components/parameters/ContractId" }]
+    get:
+      tags: [Contracts]
+      summary: Audit log for one contract (newest first)
+      responses:
+        "200":
+          description: Events
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Event" } }
+  /api/events:
+    get:
+      tags: [System]
+      summary: Audit log across all contracts (latest 200)
+      responses:
+        "200":
+          description: Events
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Event" } }
+  /api/contracts/{id}/fund:
+    parameters: [{ $ref: "#/components/parameters/ContractId" }]
+    post:
+      tags: [Contracts]
+      summary: Start funding — returns the PayPal approval link
+      description: Creates a PayPal order with intent AUTHORIZE. Send the client to approveUrl; after approval PayPal returns to /api/paypal/return, which authorizes (holds) the funds.
+      responses:
+        "200":
+          description: PayPal order
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderId: { type: string }
+                  approveUrl: { type: string, format: uri }
+        "409": { $ref: "#/components/responses/Error" }
+        "502": { $ref: "#/components/responses/Error" }
+  /api/paypal/return:
+    get:
+      tags: [Contracts]
+      summary: PayPal return URL (browser redirect target)
+      parameters:
+        - { name: contract, in: query, required: true, schema: { type: string } }
+      responses:
+        "302": { description: "Redirects to the dashboard with funded=1 or fund_error=1" }
+  /api/milestones/{id}/submit:
+    parameters: [{ $ref: "#/components/parameters/MilestoneId" }]
+    post:
+      tags: [Milestones]
+      summary: Submit work and verify it
+      description: Runs the milestone's check. On pass, captures the milestone's share and pays the worker via PayPal Payouts. On fail, money stays held.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [submission]
+              properties:
+                submission: { type: string, example: "https://github.com/mithulpranav24012008/pactpay-demo-job/pull/2" }
+      responses:
+        "200": { $ref: "#/components/responses/VerifyResult" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/milestones/{id}/verify:
+    parameters: [{ $ref: "#/components/parameters/MilestoneId" }]
+    post:
+      tags: [Milestones]
+      summary: Re-run the check (or retry only the payout if money is already captured)
+      responses:
+        "200": { $ref: "#/components/responses/VerifyResult" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/milestones/{id}/override:
+    parameters: [{ $ref: "#/components/parameters/MilestoneId" }]
+    post:
+      tags: [Milestones]
+      summary: Client override — release anyway, or reject and get the share back
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, reason]
+              properties:
+                action: { type: string, enum: [release, reject] }
+                reason: { type: string, minLength: 3 }
+      responses:
+        "200":
+          description: Updated contract
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contract" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/milestones/{id}/dispute:
+    parameters: [{ $ref: "#/components/parameters/MilestoneId" }]
+    post:
+      tags: [Milestones]
+      summary: AI dispute recommendation (advisory only; moves no money)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statement: { type: string }
+      responses:
+        "200":
+          description: Recommendation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendation: { type: string, enum: [release, reject, partial_settlement, cure_window] }
+                  recommended_split_pct: { type: number }
+                  verdict_summary: { type: string }
+                  detailed_analysis: { type: string }
+                  action_plan: { type: array, items: { type: string } }
+  /api/milestones/{id}/payout-status:
+    parameters: [{ $ref: "#/components/parameters/MilestoneId" }]
+    get:
+      tags: [Milestones]
+      summary: Live payout batch details from PayPal
+      responses:
+        "200":
+          description: Payout batch
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batch_id: { type: string }
+                  batch_status: { type: string }
+                  transaction_status: { type: string }
+                  fee: { type: string }
+    post:
+      tags: [Milestones]
+      summary: Refresh and store the payout status
+      responses:
+        "200":
+          description: Stored status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payout_status: { type: string, example: SUCCESS }
+components:
+  parameters:
+    ContractId: { name: id, in: path, required: true, schema: { type: string, example: ct_1a2b3c4d } }
+    MilestoneId: { name: id, in: path, required: true, schema: { type: string, example: ms_1a2b3c4d } }
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+    VerifyResult:
+      description: Check result, AI explanation and updated contract
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                type: object
+                properties:
+                  passed: { type: boolean }
+                  summary: { type: string }
+                  evidence: {}
+              explanation: { type: string }
+              contract: { $ref: "#/components/schemas/Contract" }
+  schemas:
+    CheckConfig:
+      type: object
+      properties:
+        repo: { type: string, description: "github_ci: owner/name the PR must be in", example: mithulpranav24012008/pactpay-demo-job }
+        require_merged: { type: boolean }
+        url: { type: string, description: "http: URL that must answer" }
+        expect_status: { type: integer, example: 200 }
+        expect_text: { type: string }
+    MilestoneInput:
+      type: object
+      required: [title, amount, check_type, check_config, acceptance]
+      properties:
+        title: { type: string }
+        amount: { type: string, pattern: '^\d+(\.\d{1,2})?$', example: "50.00" }
+        check_type: { type: string, enum: [github_ci, http, manual] }
+        check_config: { $ref: "#/components/schemas/CheckConfig" }
+        acceptance: { type: string }
+        due_at: { type: string, format: date-time, nullable: true, description: "Missed deadline = share refunded to the client" }
+    ContractDraft:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        currency: { type: string, example: USD }
+        milestones: { type: array, items: { $ref: "#/components/schemas/MilestoneInput" } }
+    CreateContract:
+      allOf:
+        - $ref: "#/components/schemas/ContractDraft"
+        - type: object
+          required: [title, description, currency, milestones, client_name, worker_name, worker_paypal_email]
+          properties:
+            client_name: { type: string }
+            worker_name: { type: string }
+            worker_paypal_email: { type: string, format: email, example: sb-v47iaq53833161@personal.example.com }
+            created_via: { type: string, enum: [web, mcp] }
+    Milestone:
+      type: object
+      properties:
+        id: { type: string }
+        position: { type: integer }
+        title: { type: string }
+        amount: { type: string }
+        check_type: { type: string, enum: [github_ci, http, manual] }
+        check_config: { $ref: "#/components/schemas/CheckConfig" }
+        submission: { type: string, nullable: true }
+        status: { type: string, enum: [pending, submitted, verifying, passed, failed, released, rejected] }
+        evidence: { type: object, nullable: true, description: Raw facts the check collected }
+        ai_summary: { type: string, nullable: true }
+        capture_id: { type: string, nullable: true }
+        payout_batch_id: { type: string, nullable: true }
+        payout_status: { type: string, nullable: true, example: SUCCESS }
+        due_at: { type: string, format: date-time, nullable: true }
+    Contract:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        client_name: { type: string }
+        worker_name: { type: string }
+        worker_paypal_email: { type: string }
+        currency: { type: string }
+        total: { type: string }
+        status: { type: string, enum: [draft, awaiting_payment, funded, completed, cancelled] }
+        created_via: { type: string, enum: [web, mcp] }
+        paypal_order_id: { type: string, nullable: true }
+        authorization_id: { type: string, nullable: true }
+        totals:
+          type: object
+          properties:
+            released: { type: string }
+            held: { type: string }
+            returned: { type: string }
+        milestones: { type: array, items: { $ref: "#/components/schemas/Milestone" } }
+    Event:
+      type: object
+      properties:
+        id: { type: integer }
+        contract_id: { type: string }
+        milestone_id: { type: string, nullable: true }
+        kind: { type: string, example: released }
+        message: { type: string }
+        data: { type: string, nullable: true }
+        created_at: { type: string }
