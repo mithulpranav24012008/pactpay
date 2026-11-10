@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef, RowClickedEvent } from 'ag-grid-community';
 import { Contract } from '../types';
-import { Table, Search } from 'lucide-react';
+import { Table, Search, Download } from 'lucide-react';
 
 interface ContractMatrixProps {
   contracts: Contract[];
@@ -15,6 +15,9 @@ export const ContractMatrix: React.FC<ContractMatrixProps> = ({
   selectedContractId,
   onSelectContract,
 }) => {
+  const gridRef = useRef<AgGridReact<Contract>>(null);
+  const [quickFilter, setQuickFilter] = useState('');
+
   const columnDefs = useMemo<ColDef<Contract>[]>(() => [
     {
       field: 'id',
@@ -115,9 +118,15 @@ export const ContractMatrix: React.FC<ContractMatrixProps> = ({
     }
   };
 
+  const handleExportCsv = () => {
+    gridRef.current?.api.exportDataAsCsv({
+      fileName: `pactpay-contracts-${new Date().toISOString().slice(0, 10)}.csv`,
+    });
+  };
+
   return (
     <div className="bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
-      <div className="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between">
+      <div className="px-5 py-3.5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-2">
           <Table className="w-4 h-4 text-cyan-400" />
           <h2 className="font-bold text-white text-sm tracking-tight">Active Contracts Matrix</h2>
@@ -125,16 +134,38 @@ export const ContractMatrix: React.FC<ContractMatrixProps> = ({
             {contracts.length}
           </span>
         </div>
-        <div className="text-xs text-slate-500 font-mono">
-          Click any row to inspect & arbitrate milestones
+        
+        {/* Search & Export Toolbar */}
+        <div className="flex items-center space-x-2.5">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+            <input
+              type="text"
+              value={quickFilter}
+              onChange={(e) => setQuickFilter(e.target.value)}
+              placeholder="Search contracts..."
+              className="bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-sans w-44 sm:w-56"
+            />
+          </div>
+          <button
+            onClick={handleExportCsv}
+            className="px-2.5 py-1 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/60 rounded-lg flex items-center space-x-1.5 transition"
+            title="Export grid data as CSV"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-400" />
+            <span className="hidden sm:inline">Export CSV</span>
+          </button>
         </div>
       </div>
       <div className="ag-theme-quartz-dark w-full h-[360px]">
         <AgGridReact<Contract>
+          ref={gridRef}
           rowData={contracts}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
+          quickFilterText={quickFilter}
           rowSelection="single"
+          getRowClass={(params) => (params.data?.id === selectedContractId ? 'bg-cyan-950/40 border-l-4 border-cyan-400' : '')}
           onRowClicked={onRowClicked}
           pagination={true}
           paginationPageSize={10}

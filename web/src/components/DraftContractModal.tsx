@@ -64,6 +64,13 @@ export const DraftContractModal: React.FC<DraftContractModalProps> = ({
     setMilestones(updated);
   };
 
+  const handleUpdateCheckConfig = (index: number, key: string, value: any) => {
+    const updated = [...milestones];
+    const cfg = { ...(updated[index].check_config || {}), [key]: value };
+    updated[index] = { ...updated[index], check_config: cfg };
+    setMilestones(updated);
+  };
+
   const handleAddMilestone = () => {
     setMilestones([
       ...milestones,
@@ -71,7 +78,7 @@ export const DraftContractModal: React.FC<DraftContractModalProps> = ({
         title: 'New Milestone Deliverable',
         amount: '25.00',
         check_type: 'github_ci',
-        check_config: { repo: 'org/repo', checks: ['test'] },
+        check_config: { repo: 'org/repo' },
         acceptance: 'Automated CI checks pass on submitted PR',
       },
     ]);
@@ -89,7 +96,24 @@ export const DraftContractModal: React.FC<DraftContractModalProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+
+    const bad = milestones.find((m) => {
+      const val = parseFloat(m.amount);
+      return isNaN(val) || val <= 0;
+    });
+    if (bad) {
+      setError(`Milestone "${bad.title}" must have a positive dollar amount (e.g. 50.00).`);
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
+      const normalizedMilestones = milestones.map((m) => ({
+        ...m,
+        amount: parseFloat(m.amount).toFixed(2),
+        check_config: m.check_config || {},
+      }));
+
       const payload = {
         title,
         description,
@@ -97,7 +121,7 @@ export const DraftContractModal: React.FC<DraftContractModalProps> = ({
         client_name: clientName,
         worker_name: workerName,
         worker_paypal_email: workerEmail,
-        milestones,
+        milestones: normalizedMilestones,
       };
       const res = await fetch('/api/contracts', {
         method: 'POST',
@@ -344,15 +368,68 @@ export const DraftContractModal: React.FC<DraftContractModalProps> = ({
                     </div>
                   </div>
 
-                  <div>
-                    <input
-                      type="text"
-                      value={m.acceptance}
-                      onChange={(e) => handleUpdateMilestone(idx, 'acceptance', e.target.value)}
-                      placeholder="Acceptance criteria / test assertion"
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-400"
-                    />
-                  </div>
+                  {m.check_type === 'github_ci' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-0.5">Target GitHub Repo (owner/repo)</label>
+                        <input
+                          type="text"
+                          value={m.check_config?.repo || ''}
+                          onChange={(e) => handleUpdateCheckConfig(idx, 'repo', e.target.value)}
+                          placeholder="e.g. org/repo-name"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-cyan-300 font-mono focus:border-cyan-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-0.5">Acceptance Criteria</label>
+                        <input
+                          type="text"
+                          value={m.acceptance}
+                          onChange={(e) => handleUpdateMilestone(idx, 'acceptance', e.target.value)}
+                          placeholder="e.g. Automated CI checks pass on PR"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:border-cyan-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {m.check_type === 'http' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-0.5">Target Service Endpoint</label>
+                        <input
+                          type="text"
+                          value={m.check_config?.url || ''}
+                          onChange={(e) => handleUpdateCheckConfig(idx, 'url', e.target.value)}
+                          placeholder="e.g. https://my-service.com/health"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-cyan-300 font-mono focus:border-cyan-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-0.5">Acceptance Criteria</label>
+                        <input
+                          type="text"
+                          value={m.acceptance}
+                          onChange={(e) => handleUpdateMilestone(idx, 'acceptance', e.target.value)}
+                          placeholder="e.g. Endpoint returns HTTP 200"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:border-cyan-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {m.check_type === 'manual' && (
+                    <div className="pt-1">
+                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-0.5">Acceptance Criteria</label>
+                      <input
+                        type="text"
+                        value={m.acceptance}
+                        onChange={(e) => handleUpdateMilestone(idx, 'acceptance', e.target.value)}
+                        placeholder="e.g. Manual client sign-off required"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:border-cyan-500 focus:outline-none"
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

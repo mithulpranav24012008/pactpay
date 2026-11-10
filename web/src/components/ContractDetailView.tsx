@@ -55,13 +55,27 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
     }
   };
 
+  const extractErrorMessage = async (res: Response, defaultMsg: string) => {
+    try {
+      const data = await res.json();
+      return data.error || defaultMsg;
+    } catch {
+      try {
+        const text = await res.text();
+        return text || defaultMsg;
+      } catch {
+        return defaultMsg;
+      }
+    }
+  };
+
   const handleFundWithPayPal = async () => {
     setIsFunding(true);
     try {
       const res = await fetch(`/api/contracts/${contract.id}/fund`, { method: 'POST' });
       if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || 'Failed to start PayPal funding');
+        const errMsg = await extractErrorMessage(res, 'Failed to start PayPal funding');
+        alert(errMsg);
         return;
       }
       const data = await res.json();
@@ -76,8 +90,11 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
   };
 
   const handleSubmitMilestone = async (milestoneId: string) => {
-    const submission = submissionUrls[milestoneId];
-    if (!submission) return;
+    const submission = (submissionUrls[milestoneId] || '').trim();
+    if (!submission) {
+      alert('Please enter a submission URL (e.g. GitHub Pull Request or HTTP endpoint)');
+      return;
+    }
     setSubmittingMilestoneId(milestoneId);
     try {
       const res = await fetch(`/api/milestones/${milestoneId}/submit`, {
@@ -86,8 +103,8 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
         body: JSON.stringify({ submission }),
       });
       if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || 'Milestone verification submission failed');
+        const errMsg = await extractErrorMessage(res, 'Milestone verification submission failed');
+        alert(errMsg);
       }
       onRefresh();
       fetchEvents();
@@ -103,8 +120,8 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
     try {
       const res = await fetch(`/api/milestones/${milestoneId}/verify`, { method: 'POST' });
       if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || 'Verification check failed');
+        const errMsg = await extractErrorMessage(res, 'Verification check failed');
+        alert(errMsg);
       }
       onRefresh();
       fetchEvents();
@@ -126,8 +143,8 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
         body: JSON.stringify({ action: overrideAction, reason: overrideReason }),
       });
       if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || 'Override action failed');
+        const errMsg = await extractErrorMessage(res, 'Override action failed');
+        alert(errMsg);
       }
       setOverrideModalMilestone(null);
       setOverrideReason('');
@@ -226,12 +243,24 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
                   </span>
                   <div>
                     <h4 className="font-semibold text-white text-sm">{milestone.title}</h4>
-                    <div className="flex items-center space-x-2 text-xs text-slate-400 font-mono mt-0.5">
+                    <div className="flex items-center space-x-2 text-xs text-slate-400 font-mono mt-0.5 flex-wrap gap-y-1">
                       <span className="text-purple-400 bg-purple-950/40 border border-purple-800/40 px-1.5 py-0.5 rounded text-[10px]">
                         {milestone.check_type}
                       </span>
+                      {milestone.check_config?.repo && (
+                        <>
+                          <span>•</span>
+                          <span className="text-cyan-400">Repo: {milestone.check_config.repo}</span>
+                        </>
+                      )}
+                      {milestone.check_config?.url && (
+                        <>
+                          <span>•</span>
+                          <span className="text-cyan-400 truncate max-w-xs">URL: {milestone.check_config.url}</span>
+                        </>
+                      )}
                       <span>•</span>
-                      <span>Acceptance: {milestone.check_config?.acceptance || 'CI Checks Pass'}</span>
+                      <span>Acceptance: {milestone.check_config?.acceptance || 'Automated Check Pass'}</span>
                     </div>
                   </div>
                 </div>
@@ -373,6 +402,12 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
               Override the automated check for milestone "{overrideModalMilestone.title}".
             </p>
 
+            {overrideModalMilestone.capture_id && (
+              <div className="p-2.5 bg-blue-950/60 border border-blue-500/30 rounded-lg text-blue-300 text-xs">
+                Funds for this milestone have already been captured from PayPal. Only <strong>Approve & Pay</strong> is available to re-send the worker payout.
+              </div>
+            )}
+
             <form onSubmit={handleOverrideSubmit} className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">
@@ -393,10 +428,13 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
                   </button>
                   <button
                     type="button"
+                    disabled={!!overrideModalMilestone.capture_id}
                     onClick={() => setOverrideAction('reject')}
                     className={`py-2 text-xs font-bold rounded-lg border flex items-center justify-center space-x-1 ${
                       overrideAction === 'reject'
                         ? 'bg-rose-600 text-white border-rose-500'
+                        : overrideModalMilestone.capture_id
+                        ? 'bg-slate-950/50 text-slate-600 border-slate-900 cursor-not-allowed'
                         : 'bg-slate-950 text-slate-400 border-slate-800'
                     }`}
                   >

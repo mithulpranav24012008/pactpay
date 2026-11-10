@@ -11,3 +11,4 @@ __pycache__/
 venv/
 .playwright-mcp
 graphify-out
+pactpay_state.json
