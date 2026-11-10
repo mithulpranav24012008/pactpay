@@ -96,3 +96,54 @@ export async function explainCheck(milestone: string, passed: boolean, summary: 
     return summary; // explanation is a nice-to-have; never block the money flow on it
   }
 }
+
+export const DisputeRecommendation = z.object({
+  recommendation: z.enum(["release", "reject", "partial_settlement", "cure_window"]),
+  recommended_split_pct: z.number().min(0).max(100).describe("Suggested percentage of milestone amount to release to worker (e.g. 50 for split, 100 for release, 0 for reject)"),
+  verdict_summary: z.string().describe("1-2 sentence executive verdict"),
+  detailed_analysis: z.string().describe("Fair and impartial breakdown of what was achieved vs what failed according to contract terms"),
+  action_plan: z.array(z.string()).describe("Concrete bullet points for resolving the dispute amicably"),
+});
+export type DisputeRecommendation = z.infer<typeof DisputeRecommendation>;
+
+const DISPUTE_SYSTEM = `You are the Autonomous AI Escrow Arbitrator for PactPay.
+A milestone in an agentic commerce contract has failed or has been disputed by the client or worker.
+Your job is to objectively analyze:
+1. The contract title, description, and milestone acceptance criteria.
+2. The submission evidence and automated verification check output.
+3. The counterparty's dispute statement or complaint.
+
+Provide a neutral, fair, and legally sound recommendation:
+- "release": If the worker satisfied the core requirements and the failure was a minor technicality or client environment issue.
+- "reject": If the deliverable fundamentally failed to meet acceptance criteria and the worker made insufficient progress.
+- "partial_settlement": If substantial good-faith work was done but critical bugs remain (recommend split percentage, e.g. 50%).
+- "cure_window": If the worker should be given an extra 24-48 hours to patch the defect before funds are forfeited.`;
+
+export async function mediateDispute(params: {
+  contractTitle: string;
+  contractDescription: string;
+  milestoneTitle: string;
+  milestoneAmount: string;
+  acceptance: string;
+  evidence: unknown;
+  disputeStatement: string;
+}): Promise<DisputeRecommendation> {
+  if (!KEYS.length) {
+    return {
+      recommendation: "cure_window",
+      recommended_split_pct: 50,
+      verdict_summary: "AI arbitration requires GEMINI_API_KEYS. Recommend a 48h cure window for mutual code review.",
+      detailed_analysis: "No AI keys configured; defaulting to standard commercial cure window.",
+      action_plan: ["Worker reviews CI logs", "Client provides clarification on expectations"],
+    };
+  }
+  const prompt = `Contract: ${params.contractTitle}
+Description: ${params.contractDescription}
+Milestone: ${params.milestoneTitle} ($${params.milestoneAmount})
+Acceptance Criteria: ${params.acceptance}
+Verification Evidence: ${JSON.stringify(params.evidence || {}).slice(0, 4000)}
+Dispute Statement: ${params.disputeStatement || "Automated verification check failed and parties cannot agree on deliverable completion."}`;
+
+  const text = await generate(DISPUTE_SYSTEM, prompt, z.toJSONSchema(DisputeRecommendation));
+  return DisputeRecommendation.parse(JSON.parse(text));
+}

@@ -154,4 +154,12 @@ export async function payoutToWorker(opts: { milestoneId: string; email: string;
   return { batchId: res.batch_header.payout_batch_id, status: res.batch_header.batch_status };
 }
 
+/** Check confirmation status of a PayPal payout batch. */
+export async function getPayoutBatch(payoutBatchId: string) {
+  return await call<{
+    batch_header: { payout_batch_id: string; batch_status: string; time_created?: string; time_completed?: string };
+    items?: Array<{ payout_item_id: string; transaction_status: string; payout_item_fee?: { value: string } }>;
+  }>("payout-status", "GET", `/v1/payments/payouts/${payoutBatchId}`);
+}
+
 export const paypalConfigured = () => Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET);

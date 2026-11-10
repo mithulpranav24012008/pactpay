@@ -9,7 +9,7 @@ import {
 } from "./db.js";
 import * as paypal from "./paypal.js";
 import { runCheck } from "./verify.js";
-import { draftContract, explainCheck, ContractDraft, aiConfigured } from "./agent.js";
+import { draftContract, explainCheck, mediateDispute, ContractDraft, aiConfigured } from "./agent.js";
 
 const app = express();
 app.use(cors());
@@ -248,6 +248,68 @@ app.post("/api/milestones/:id/override", async (req, res) => {
     }
     return contractView(m.contract_id);
   });
+});
+
+// Autonomous AI Dispute Mediation: evaluates evidence and suggests fair settlement
+app.post("/api/milestones/:id/dispute", async (req, res) => {
+  const { statement } = z.object({ statement: z.string().default("") }).parse(req.body);
+  const m = getMilestone(req.params.id);
+  if (!m) return res.status(404).json({ error: "not found" });
+  const c = getContract(m.contract_id);
+  if (!c) return res.status(404).json({ error: "contract not found" });
+
+  let evidence: unknown = null;
+  try {
+    evidence = m.evidence ? JSON.parse(m.evidence) : null;
+  } catch {
+    evidence = m.evidence;
+  }
+
+  let cfg: any = {};
+  try {
+    cfg = m.check_config ? JSON.parse(m.check_config) : {};
+  } catch {
+    cfg = {};
+  }
+
+  try {
+    const recommendation = await mediateDispute({
+      contractTitle: c.title,
+      contractDescription: c.description,
+      milestoneTitle: m.title,
+      milestoneAmount: m.amount,
+      acceptance: cfg.acceptance || "Automated check pass",
+      evidence,
+      disputeStatement: statement,
+    });
+
+    logEvent(c.id, "dispute_mediated", `AI Arbitrator issued verdict for "${m.title}": ${recommendation.verdict_summary}`, m.id, recommendation);
+    res.json({ ...recommendation, milestone_id: m.id });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+// Confirmed PayPal Payout Status: query live status from PayPal Sandbox
+app.get("/api/milestones/:id/payout-status", async (req, res) => {
+  const m = getMilestone(req.params.id);
+  if (!m) return res.status(404).json({ error: "not found" });
+  if (!m.payout_batch_id) return res.status(404).json({ error: "No payout batch ID for this milestone" });
+
+  try {
+    const batch = await paypal.getPayoutBatch(m.payout_batch_id);
+    const item = batch.items?.[0];
+    res.json({
+      batch_id: batch.batch_header.payout_batch_id,
+      batch_status: batch.batch_header.batch_status,
+      time_created: batch.batch_header.time_created,
+      time_completed: batch.batch_header.time_completed,
+      transaction_status: item?.transaction_status || batch.batch_header.batch_status,
+      fee: item?.payout_item_fee?.value || "0.00",
+    });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
 });
 
 // ---------- dashboard (production) ----------
