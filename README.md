@@ -32,3 +32,7 @@ See [docs/API.md](docs/API.md) for the API.
 
 ## License
 MIT
+
+## Demo job
+[pactpay-demo-job](https://github.com/mithulpranav24012008/pactpay-demo-job) is the job used in the video:
+PR #1 fails its tests (money stays held), PR #2 passes (money is released).

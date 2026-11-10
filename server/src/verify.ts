@@ -41,7 +41,7 @@ export async function checkGithubCi(prUrl: string, cfg: { require_merged?: boole
     ...checkRuns.filter((r) => !["success", "neutral", "skipped"].includes(r.conclusion)).map((r) => r.name),
     ...statuses.filter((s) => s.state !== "success").map((s) => s.context),
   ];
-  if (failed.length) return { passed: false, summary: `CI failed: ${failed.join(", ")}`, evidence };
+  if (failed.length) return { passed: false, summary: `CI failed: ${[...new Set(failed)].join(", ")}`, evidence };
   if (cfg.require_merged && !pr.merged) return { passed: false, summary: "CI passed but the PR is not merged yet", evidence };
   return { passed: true, summary: `All ${checkRuns.length + statuses.length} CI checks passed on ${sha.slice(0, 7)}`, evidence };
 }
