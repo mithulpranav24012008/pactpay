@@ -1,0 +1,9 @@
+{
+  "name": "pactpay",
+  "private": true,
+  "workspaces": ["server", "web"],
+  "scripts": {
+    "dev:server": "npm --workspace server run dev",
+    "dev:web": "npm --workspace web run dev"
+  }
+}
