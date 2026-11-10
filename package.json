@@ -1,9 +1,14 @@
 {
   "name": "pactpay",
   "private": true,
-  "workspaces": ["server", "web"],
+  "workspaces": [
+    "server",
+    "web",
+    "mcp"
+  ],
   "scripts": {
     "dev:server": "npm --workspace server run dev",
-    "dev:web": "npm --workspace web run dev"
+    "dev:web": "npm --workspace web run dev",
+    "mcp": "npm --workspace mcp start"
   }
 }

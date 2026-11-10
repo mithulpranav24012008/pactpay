@@ -44,6 +44,15 @@ CREATE TABLE IF NOT EXISTS events (
 );
 `);
 
+// Columns added after the first release; ALTER is a no-op error when they already exist.
+for (const sql of [
+  "ALTER TABLE milestones ADD COLUMN due_at TEXT",
+  "ALTER TABLE milestones ADD COLUMN payout_status TEXT",
+  "ALTER TABLE contracts ADD COLUMN created_via TEXT NOT NULL DEFAULT 'web'",
+]) {
+  try { db.exec(sql); } catch { /* column exists */ }
+}
+
 export type ContractStatus = "draft" | "awaiting_payment" | "funded" | "completed" | "cancelled";
 export type MilestoneStatus =
   | "pending" | "submitted" | "verifying" | "passed" | "failed" | "released" | "rejected";
@@ -52,12 +61,14 @@ export interface Contract {
   id: string; title: string; description: string; client_name: string; worker_name: string;
   worker_paypal_email: string; currency: string; total: string; status: ContractStatus;
   paypal_order_id: string | null; authorization_id: string | null; created_at: string;
+  created_via: string;
 }
 export interface Milestone {
   id: string; contract_id: string; position: number; title: string; amount: string;
   check_type: "github_ci" | "http" | "manual"; check_config: string; submission: string | null;
   status: MilestoneStatus; evidence: string | null; ai_summary: string | null;
   capture_id: string | null; payout_batch_id: string | null; updated_at: string;
+  due_at: string | null; payout_status: string | null;
 }
 
 export function logEvent(contractId: string, kind: string, message: string, milestoneId?: string, data?: unknown) {

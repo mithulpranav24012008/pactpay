@@ -53,6 +53,11 @@ const CreateContract = ContractDraft.extend({
   client_name: z.string(),
   worker_name: z.string(),
   worker_paypal_email: z.string().email(),
+  created_via: z.enum(["web", "mcp"]).optional(),
+  milestones: z.array(ContractDraft.shape.milestones.element.extend({
+    // Optional deadline (ISO 8601). If nothing has passed by then, that share goes back to the client.
+    due_at: z.string().datetime({ offset: true }).nullish(),
+  })).min(1),
 });
 
 const AMOUNT = /^\d+(\.\d{1,2})?$/;
@@ -63,14 +68,14 @@ app.post("/api/contracts", (req, res) => {
   if (bad) return res.status(400).json({ error: `Milestone "${bad.title}" needs a positive amount like 50 or 49.99 (got "${bad.amount}")` });
   const id = `ct_${randomUUID().slice(0, 8)}`;
   const total = body.milestones.reduce((s, m) => s + cents(m.amount), 0);
-  db.prepare(`INSERT INTO contracts (id, title, description, client_name, worker_name, worker_paypal_email, currency, total)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run(id, body.title, body.description, body.client_name, body.worker_name, body.worker_paypal_email, body.currency || "USD", money(total));
+  db.prepare(`INSERT INTO contracts (id, title, description, client_name, worker_name, worker_paypal_email, currency, total, created_via)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(id, body.title, body.description, body.client_name, body.worker_name, body.worker_paypal_email, body.currency || "USD", money(total), body.created_via ?? "web");
   body.milestones.forEach((m, i) => {
-    db.prepare(`INSERT INTO milestones (id, contract_id, position, title, amount, check_type, check_config)
-                VALUES (?, ?, ?, ?, ?, ?, ?)`)
+    db.prepare(`INSERT INTO milestones (id, contract_id, position, title, amount, check_type, check_config, due_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
       .run(`ms_${randomUUID().slice(0, 8)}`, id, i + 1, m.title, money(cents(m.amount)), m.check_type,
-        JSON.stringify({ ...m.check_config, acceptance: m.acceptance }));
+        JSON.stringify({ ...m.check_config, acceptance: m.acceptance }), m.due_at ? new Date(m.due_at).toISOString() : null);
   });
   logEvent(id, "created", `Contract drafted: ${body.milestones.length} milestones, ${money(total)} ${body.currency || "USD"}`);
   res.status(201).json(contractView(id));
@@ -154,7 +159,7 @@ async function release(m: Milestone, reason: string) {
     milestoneId: m.id, email: c.worker_paypal_email, currency: c.currency, amount: m.amount,
     note: `${c.title} - ${m.title}: ${reason}`,
   });
-  setMilestone(m.id, { status: "released", capture_id: captureId, payout_batch_id: payout.batchId });
+  setMilestone(m.id, { status: "released", capture_id: captureId, payout_batch_id: payout.batchId, payout_status: payout.status });
   logEvent(c.id, "released", `Paid ${m.amount} ${c.currency} to ${c.worker_name}`, m.id, payout);
   await finishIfDone(c.id, false);
 }
@@ -311,6 +316,58 @@ app.get("/api/milestones/:id/payout-status", async (req, res) => {
     res.status(500).json({ error: (e as Error).message });
   }
 });
+
+// ---------- payout confirmation ----------
+async function refreshPayout(m: Milestone) {
+  if (!m.payout_batch_id) return m.payout_status;
+  const st = await paypal.payoutStatus(m.payout_batch_id);
+  if (st.item !== m.payout_status) {
+    setMilestone(m.id, { payout_status: st.item });
+    logEvent(m.contract_id, "payout_status", `PayPal reports the payout for "${m.title}" as ${st.item}`, m.id, st);
+  }
+  return st.item;
+}
+
+app.post("/api/milestones/:id/payout-status", async (req, res) => {
+  const m = getMilestone(req.params.id);
+  if (!m) return res.status(404).json({ error: "not found" });
+  if (!m.payout_batch_id) return res.status(409).json({ error: "No payout has been sent for this milestone" });
+  res.json({ payout_status: await refreshPayout(m) });
+});
+
+// ---------- background sweep: deadlines and payout confirmation ----------
+// A milestone past its deadline with nothing passed is rejected, exactly as if the client had
+// rejected it: if it was the last open one the hold is voided now, otherwise its share is never
+// captured and is released back when the contract closes.
+const FINAL_PAYOUT = new Set(["SUCCESS", "FAILED", "RETURNED", "REVERSED", "BLOCKED", "REFUNDED"]);
+async function sweep() {
+  const now = new Date().toISOString();
+  const overdue = db.prepare(`SELECT m.* FROM milestones m JOIN contracts c ON c.id = m.contract_id
+    WHERE c.status = 'funded' AND m.due_at IS NOT NULL AND m.due_at < ?
+      AND m.status NOT IN ('released', 'rejected') AND m.capture_id IS NULL`).all(now) as unknown as Milestone[];
+  for (const m of overdue) {
+    if (busy.has(m.id)) continue;
+    busy.add(m.id);
+    try {
+      setMilestone(m.id, { status: "rejected" });
+      logEvent(m.contract_id, "deadline_refund", `"${m.title}" missed its deadline; ${m.amount} goes back to the client`, m.id, { due_at: m.due_at });
+      await finishIfDone(m.contract_id, true);
+    } catch (e) {
+      logEvent(m.contract_id, "error", `Deadline handling failed: ${(e as Error).message}`, m.id);
+    } finally {
+      busy.delete(m.id);
+    }
+  }
+  const unconfirmed = db.prepare(`SELECT * FROM milestones WHERE payout_batch_id IS NOT NULL
+    AND (payout_status IS NULL OR payout_status NOT IN (${[...FINAL_PAYOUT].map(() => "?").join(",")}))`).all(...FINAL_PAYOUT) as unknown as Milestone[];
+  for (const m of unconfirmed) {
+    try { await refreshPayout(m); } catch { /* try again next sweep */ }
+  }
+}
+if (paypal.paypalConfigured()) {
+  const SWEEP_MS = Number(process.env.SWEEP_MS ?? 30_000);
+  setInterval(() => void sweep(), SWEEP_MS).unref();
+}
 
 // ---------- dashboard (production) ----------
 if (SERVE_WEB) {

@@ -77,6 +77,7 @@ All four paths were run end to end against the live PayPal sandbox:
 | Fail and hold | PR #1 fails CI, $0 released, $100 still held |
 | Pass and pay | PR #2 passes CI, $60 captured and paid out (payout batch status SUCCESS) |
 | Reject and refund | Milestone URL returns 404, client rejects, remaining authorization voided, $20 returned |
+| Agent via MCP + deadline | Contract created and funded through the MCP server; PR passed, $12 paid (PayPal confirmed SUCCESS); second milestone missed its deadline, $8 returned automatically |
 
 ## 📊 AG Grid Sponsor Feature
 PactPay's telemetry dashboard utilizes **AG Grid** to provide:
@@ -92,6 +93,28 @@ PactPay's telemetry dashboard utilizes **AG Grid** to provide:
   - **PR #2 (Passing CI):** Demonstrates automated verification pass — funds captured and disbursed instantly via PayPal Payouts.
 
 ---
+
+## 🤖 For AI agents: PactPay MCP server
+Any MCP-capable agent (Claude, Cursor, Codex…) can hire and pay through PactPay. With the API running (`npm run dev:server`), add this to the agent's MCP config:
+
+```json
+{
+  "mcpServers": {
+    "pactpay": {
+      "command": "npx",
+      "args": ["tsx", "/absolute/path/to/pactpay/mcp/src/index.ts"],
+      "env": { "PACTPAY_URL": "http://localhost:4000" }
+    }
+  }
+}
+```
+
+Tools: `draft_contract`, `create_contract`, `fund_contract`, `submit_work`, `contract_status`, `list_contracts`.
+The agent can post a job, hand a human the PayPal approval link, submit work and watch it get paid, but it can never approve a payment itself: funding needs a human in PayPal, and payouts need a passing check.
+
+## ⏰ Deadlines and confirmed payouts
+- Each milestone can have a deadline (`due_at`). If nothing has passed by then, PactPay rejects it automatically and that share goes back to the client (the remaining PayPal authorization is voided when the contract closes).
+- After a payout, PactPay keeps asking PayPal until the payout is final (`SUCCESS`, `UNCLAIMED`, `FAILED`…) and shows the confirmed state.
 
 ## 🚀 Run it locally (about 5 minutes)
 

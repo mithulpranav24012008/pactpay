@@ -162,4 +162,11 @@ export async function getPayoutBatch(payoutBatchId: string) {
   }>("payout-status", "GET", `/v1/payments/payouts/${payoutBatchId}`);
 }
 
+/** Where a payout actually stands at PayPal: SUCCESS, PENDING, UNCLAIMED, FAILED, RETURNED... */
+export async function payoutStatus(batchId: string) {
+  const res = await call<any>("payout status", "GET", `/v1/payments/payouts/${batchId}`);
+  const item = res.items?.[0];
+  return { batch: String(res.batch_header?.batch_status ?? "UNKNOWN"), item: String(item?.transaction_status ?? "UNKNOWN") };
+}
+
 export const paypalConfigured = () => Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET);
