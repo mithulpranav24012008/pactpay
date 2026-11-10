@@ -118,6 +118,7 @@ async function release(m: Milestone, reason: string) {
   if (!c.authorization_id) throw new Error("Contract is not funded");
   const others = listMilestones(c.id).filter((x) => x.id !== m.id && !["released", "rejected"].includes(x.status));
   const cap = await paypal.captureMilestone(c.authorization_id, c.currency, m.amount, others.length === 0, m.id);
+  setMilestone(m.id, { capture_id: cap.captureId }); // keep it even if the payout below fails; a retry reuses it
   logEvent(c.id, "captured", `Captured ${m.amount} ${c.currency} for "${m.title}"`, m.id, cap);
   const payout = await paypal.payoutToWorker({
     milestoneId: m.id, email: c.worker_paypal_email, currency: c.currency, amount: m.amount,
