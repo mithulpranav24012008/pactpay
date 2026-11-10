@@ -24,4 +24,4 @@ Milestone: `{id, contract_id, position, title, amount, check_type: github_ci|htt
 Milestone status: `pending -> submitted -> verifying -> passed -> released`, or `failed` (money stays held; resubmit or override), or `rejected` (that share goes back to the client).
 
 ## Health
-- `GET /api/health` -> `{ok, paypal, claude}` (whether keys are configured)
+- `GET /api/health` -> `{ok, paypal, ai}` (whether keys are configured)

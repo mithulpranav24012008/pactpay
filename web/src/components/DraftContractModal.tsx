@@ -134,7 +134,7 @@ export const DraftContractModal: React.FC<DraftContractModalProps> = ({
               </h3>
               <p className="text-xs text-slate-400">
                 {step === 'brief'
-                  ? 'Describe the job in plain English; Claude structures checkable milestones.'
+                  ? 'Describe the job in plain English; Gemini structures checkable milestones.'
                   : 'Adjust milestone tranches, verification requirements, and counterparty details.'}
               </p>
             </div>
@@ -201,7 +201,7 @@ export const DraftContractModal: React.FC<DraftContractModalProps> = ({
                 {isDrafting ? (
                   <>
                     <Sparkles className="w-4 h-4 animate-spin" />
-                    <span>Claude Drafting Milestones...</span>
+                    <span>Gemini Drafting Milestones...</span>
                   </>
                 ) : (
                   <>

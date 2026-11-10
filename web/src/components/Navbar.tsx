@@ -8,13 +8,13 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenCreate, onRefresh, isRefreshing }) => {
-  const [health, setHealth] = useState<{ ok: boolean; paypal: boolean; claude: boolean } | null>(null);
+  const [health, setHealth] = useState<{ ok: boolean; paypal: boolean; ai: boolean } | null>(null);
 
   useEffect(() => {
     fetch('/api/health')
       .then(res => res.json())
       .then(data => setHealth(data))
-      .catch(() => setHealth({ ok: false, paypal: false, claude: false }));
+      .catch(() => setHealth({ ok: false, paypal: false, ai: false }));
   }, []);
 
   return (
@@ -48,8 +48,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCreate, onRefresh, isRefre
                 <span className="text-slate-400">PayPal {health.paypal ? 'Sandbox' : 'Simulated'}</span>
               </div>
               <div className="flex items-center space-x-1.5 pl-2 border-l border-slate-800">
-                <span className={`w-2 h-2 rounded-full ${health.claude ? 'bg-purple-400' : 'bg-slate-500'}`} />
-                <span className="text-slate-400">Claude Arbitrator</span>
+                <span className={`w-2 h-2 rounded-full ${health.ai ? 'bg-purple-400' : 'bg-slate-500'}`} />
+                <span className="text-slate-400">Gemini Arbitrator</span>
               </div>
             </div>
           )}

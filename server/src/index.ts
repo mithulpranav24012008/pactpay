@@ -7,7 +7,7 @@ import {
 } from "./db.js";
 import * as paypal from "./paypal.js";
 import { runCheck } from "./verify.js";
-import { draftContract, explainCheck, ContractDraft } from "./agent.js";
+import { draftContract, explainCheck, ContractDraft, aiConfigured } from "./agent.js";
 
 const app = express();
 app.use(cors());
@@ -34,7 +34,7 @@ function contractView(id: string) {
 
 // ---------- health ----------
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, paypal: paypal.paypalConfigured(), claude: Boolean(process.env.ANTHROPIC_API_KEY) });
+  res.json({ ok: true, paypal: paypal.paypalConfigured(), ai: aiConfigured() });
 });
 
 // ---------- agent: plain-English brief -> draft contract ----------
