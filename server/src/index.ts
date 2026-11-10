@@ -39,7 +39,7 @@ function contractView(id: string) {
 
 // ---------- health ----------
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, paypal: paypal.paypalConfigured(), ai: aiConfigured() });
+  res.json({ ok: true, paypal: paypal.paypalConfigured(), ai: aiConfigured(), claude: aiConfigured() });
 });
 
 // ---------- agent: plain-English brief -> draft contract ----------
@@ -122,14 +122,18 @@ async function release(m: Milestone, reason: string) {
   const c = getContract(m.contract_id)!;
   if (!c.authorization_id) throw new Error("Contract is not funded");
   const others = listMilestones(c.id).filter((x) => x.id !== m.id && !["released", "rejected"].includes(x.status));
-  const cap = await paypal.captureMilestone(c.authorization_id, c.currency, m.amount, others.length === 0, m.id);
-  setMilestone(m.id, { capture_id: cap.captureId }); // keep it even if the payout below fails; a retry reuses it
-  logEvent(c.id, "captured", `Captured ${m.amount} ${c.currency} for "${m.title}"`, m.id, cap);
+  let captureId = m.capture_id;
+  if (!captureId) {
+    const cap = await paypal.captureMilestone(c.authorization_id, c.currency, m.amount, others.length === 0, m.id);
+    captureId = cap.captureId;
+    setMilestone(m.id, { capture_id: captureId }); // keep it even if the payout below fails; a retry reuses it
+    logEvent(c.id, "captured", `Captured ${m.amount} ${c.currency} for "${m.title}"`, m.id, cap);
+  }
   const payout = await paypal.payoutToWorker({
     milestoneId: m.id, email: c.worker_paypal_email, currency: c.currency, amount: m.amount,
     note: `${c.title} - ${m.title}: ${reason}`,
   });
-  setMilestone(m.id, { status: "released", capture_id: cap.captureId, payout_batch_id: payout.batchId });
+  setMilestone(m.id, { status: "released", capture_id: captureId, payout_batch_id: payout.batchId });
   logEvent(c.id, "released", `Paid ${m.amount} ${c.currency} to ${c.worker_name}`, m.id, payout);
   await finishIfDone(c.id);
 }
