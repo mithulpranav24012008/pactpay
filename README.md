@@ -79,11 +79,16 @@ All four paths were run end to end against the live PayPal sandbox:
 | Reject and refund | Milestone URL returns 404, client rejects, remaining authorization voided, $20 returned |
 | Agent via MCP + deadline | Contract created and funded through the MCP server; PR passed, $12 paid (PayPal confirmed SUCCESS); second milestone missed its deadline, $8 returned automatically |
 
-## 📊 AG Grid Sponsor Feature
-PactPay's telemetry dashboard utilizes **AG Grid** to provide:
-- **Contract Matrix:** Real-time grid displaying contract values, escrow status, PayPal order references, and client/worker metadata.
-- **Milestone Inspector:** Sub-grid detailing milestone tranches, verification engine types, deliverable URLs, and PayPal payout IDs.
-- **Audit Feed:** Event log of every funding, verification, capture, payout, override and void, with the evidence behind each decision.
+## 📊 AG Grid & AG Charts Sponsor Features
+PactPay's telemetry dashboard utilizes both **AG Grid** and **AG Charts** (`ag-charts-community` / `ag-charts-react`) to provide institutional-grade financial monitoring:
+- **Executive KPI Aggregation Bar:** Live portfolio metrics above the matrix (Total Escrow Volume, Currently Held in Escrow, Paid Out, and % Agentic Escrows).
+- **Interactive Visual Telemetry (AG Charts):**
+  - **Capital Allocation Breakdown:** Multi-series bar chart visualizing held vs paid vs refunded liquidity across contracts.
+  - **Settlement Distribution:** Donut chart categorizing milestone outcomes (Paid & Settled, Active, Refunded, Disputed).
+- **Interactive Contract Matrix (AG Grid):**
+  - **Fulfillment Progress Cell Renderer:** Real-time visual progress bar showing % of escrow settled per contract.
+  - **Preset Filter Chips:** Instant matrix segmentation (`All`, `⚡ Agent (MCP)`, `Funded`, `Awaiting`, `Completed`).
+  - **Quick Search & Dual Audit Export:** Full-text filtering and instant one-click CSV and JSON export for accounting and compliance.
 
 ---
 

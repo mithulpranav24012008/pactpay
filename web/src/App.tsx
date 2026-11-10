@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { MetricsOverview } from './components/MetricsOverview';
 import { ContractMatrix } from './components/ContractMatrix';
+import { AnalyticsCharts } from './components/AnalyticsCharts';
 import { ContractDetailView } from './components/ContractDetailView';
 import { DraftContractModal } from './components/DraftContractModal';
 import { Contract } from './types';
@@ -97,6 +98,9 @@ export const App: React.FC = () => {
 
         {/* Top KPIs */}
         <MetricsOverview contracts={contracts} />
+
+        {/* AG Charts: Live Visual Telemetry */}
+        <AnalyticsCharts contracts={contracts} />
 
         {/* AG Grid Contract Matrix */}
         <ContractMatrix
