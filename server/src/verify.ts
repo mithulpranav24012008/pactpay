@@ -19,11 +19,15 @@ const gh = async (path: string) => {
 };
 
 /** Passes when every check run and commit status on the PR's head commit succeeded. */
-export async function checkGithubCi(prUrl: string, cfg: { require_merged?: boolean }): Promise<CheckResult> {
+export async function checkGithubCi(prUrl: string, cfg: { require_merged?: boolean; repo?: string }): Promise<CheckResult> {
   const m = prUrl.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
   if (!m) return { passed: false, summary: "Submission is not a GitHub pull request URL", evidence: { prUrl } };
   const [, owner, repo, num] = m;
   try {
+    // The PR must be in the repository the contract names, or any green PR on GitHub would get paid.
+    const expected = (cfg.repo ?? "").trim().replace(/^https?:\/\/github\.com\//, "").replace(/\.git$|\/$/g, "").toLowerCase();
+    if (expected && expected !== `${owner}/${repo}`.toLowerCase())
+      return { passed: false, summary: `PR is in ${owner}/${repo}, but this contract is for ${expected}`, evidence: { prUrl, expectedRepo: expected } };
     const pr = await gh(`/repos/${owner}/${repo}/pulls/${num}`);
     const sha: string = pr.head?.sha;
     if (!sha) return { passed: false, summary: "Could not resolve head commit SHA on pull request", evidence: { prUrl } };
