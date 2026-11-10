@@ -119,8 +119,8 @@ PactPay's telemetry dashboard utilizes **AG Grid** to provide:
 ## 📄 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Deploy (Render)
-`render.yaml` is a Render Blueprint: one free web service that runs the API and serves the dashboard.
+## Optional: deploy to Render
+`render.yaml` is a Render Blueprint (not required to run or judge the project): one free web service that runs the API and serves the dashboard.
 In Render: **New → Blueprint**, pick this repo, then fill in `PUBLIC_URL` (the service URL, e.g.
 `https://pactpay.onrender.com`), `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `GEMINI_API_KEYS`, and optionally `GITHUB_TOKEN`.
 The free plan's disk is temporary, so contracts reset when the service restarts.
