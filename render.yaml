@@ -1,0 +1,26 @@
+# Render Blueprint: one web service that runs the API and serves the built dashboard.
+services:
+  - type: web
+    name: pactpay
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm --workspace web run build
+    startCommand: npm --workspace server start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: PAYPAL_API_BASE
+        value: https://api-m.sandbox.paypal.com
+      - key: PUBLIC_URL
+        sync: false   # e.g. https://pactpay.onrender.com
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: GEMINI_API_KEYS
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false

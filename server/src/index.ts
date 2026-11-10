@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import {
   db, getContract, getMilestone, listMilestones, logEvent, setContract, setMilestone, type Milestone,
@@ -14,7 +16,10 @@ app.use(cors());
 app.use(express.json());
 
 const PUBLIC_URL = process.env.PUBLIC_URL ?? "http://localhost:4000";
-const WEB_URL = process.env.WEB_URL ?? "http://localhost:5173";
+// In production the API also serves the built dashboard, so both live on PUBLIC_URL.
+const WEB_DIST = fileURLToPath(new URL("../../web/dist", import.meta.url));
+const SERVE_WEB = existsSync(WEB_DIST) && process.env.NODE_ENV === "production";
+const WEB_URL = process.env.WEB_URL ?? (SERVE_WEB ? PUBLIC_URL : "http://localhost:5173");
 const cents = (v: string) => Math.round(Number(v) * 100);
 const money = (c: number) => (c / 100).toFixed(2);
 
@@ -205,6 +210,12 @@ app.post("/api/milestones/:id/override", async (req, res) => {
   }
   res.json(contractView(m.contract_id));
 });
+
+// ---------- dashboard (production) ----------
+if (SERVE_WEB) {
+  app.use(express.static(WEB_DIST));
+  app.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile(`${WEB_DIST}/index.html`));
+}
 
 // ---------- errors ----------
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
