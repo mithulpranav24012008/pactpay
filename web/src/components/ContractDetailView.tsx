@@ -38,8 +38,10 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
   const [overrideReason, setOverrideReason] = useState('');
   const [isSubmittingOverride, setIsSubmittingOverride] = useState(false);
   const [activeTab, setActiveTab] = useState<'milestones' | 'events'>('milestones');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    setErrorMessage(null);
     fetchEvents();
   }, [contract.id]);
 
@@ -71,11 +73,12 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
 
   const handleFundWithPayPal = async () => {
     setIsFunding(true);
+    setErrorMessage(null);
     try {
       const res = await fetch(`/api/contracts/${contract.id}/fund`, { method: 'POST' });
       if (!res.ok) {
         const errMsg = await extractErrorMessage(res, 'Failed to start PayPal funding');
-        alert(errMsg);
+        setErrorMessage(errMsg);
         return;
       }
       const data = await res.json();
@@ -83,7 +86,7 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
         window.location.href = data.approveUrl;
       }
     } catch (e: any) {
-      alert(e.message || 'Error funding with PayPal');
+      setErrorMessage(e.message || 'Error funding with PayPal');
     } finally {
       setIsFunding(false);
     }
@@ -92,10 +95,11 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
   const handleSubmitMilestone = async (milestoneId: string) => {
     const submission = (submissionUrls[milestoneId] || '').trim();
     if (!submission) {
-      alert('Please enter a submission URL (e.g. GitHub Pull Request or HTTP endpoint)');
+      setErrorMessage('Please enter a submission URL (e.g. GitHub Pull Request or HTTP endpoint)');
       return;
     }
     setSubmittingMilestoneId(milestoneId);
+    setErrorMessage(null);
     try {
       const res = await fetch(`/api/milestones/${milestoneId}/submit`, {
         method: 'POST',
@@ -104,12 +108,12 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
       });
       if (!res.ok) {
         const errMsg = await extractErrorMessage(res, 'Milestone verification submission failed');
-        alert(errMsg);
+        setErrorMessage(errMsg);
       }
       onRefresh();
       fetchEvents();
     } catch (e: any) {
-      alert(e.message || 'Error submitting milestone');
+      setErrorMessage(e.message || 'Error submitting milestone');
     } finally {
       setSubmittingMilestoneId(null);
     }
@@ -117,16 +121,17 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
 
   const handleReVerify = async (milestoneId: string) => {
     setSubmittingMilestoneId(milestoneId);
+    setErrorMessage(null);
     try {
       const res = await fetch(`/api/milestones/${milestoneId}/verify`, { method: 'POST' });
       if (!res.ok) {
         const errMsg = await extractErrorMessage(res, 'Verification check failed');
-        alert(errMsg);
+        setErrorMessage(errMsg);
       }
       onRefresh();
       fetchEvents();
     } catch (e: any) {
-      alert(e.message || 'Error re-verifying');
+      setErrorMessage(e.message || 'Error re-verifying');
     } finally {
       setSubmittingMilestoneId(null);
     }
@@ -136,6 +141,7 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
     e.preventDefault();
     if (!overrideModalMilestone) return;
     setIsSubmittingOverride(true);
+    setErrorMessage(null);
     try {
       const res = await fetch(`/api/milestones/${overrideModalMilestone.id}/override`, {
         method: 'POST',
@@ -144,14 +150,14 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
       });
       if (!res.ok) {
         const errMsg = await extractErrorMessage(res, 'Override action failed');
-        alert(errMsg);
+        setErrorMessage(errMsg);
       }
       setOverrideModalMilestone(null);
       setOverrideReason('');
       onRefresh();
       fetchEvents();
     } catch (e: any) {
-      alert(e.message || 'Error submitting override');
+      setErrorMessage(e.message || 'Error submitting override');
     } finally {
       setIsSubmittingOverride(false);
     }
@@ -202,6 +208,22 @@ export const ContractDetailView: React.FC<ContractDetailViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* API / State Error Banner */}
+      {errorMessage && (
+        <div className="mx-6 bg-rose-950/80 border border-rose-500/40 text-rose-300 px-4 py-3 rounded-xl flex items-center justify-between shadow-lg">
+          <div className="flex items-center space-x-2 text-xs font-semibold">
+            <ShieldAlert className="w-4 h-4 text-rose-400 flex-shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            onClick={() => setErrorMessage(null)}
+            className="text-xs text-rose-400 hover:text-white underline ml-4 flex-shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="px-6 border-b border-slate-800 flex space-x-6">

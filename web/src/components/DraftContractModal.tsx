@@ -78,7 +78,7 @@ export const DraftContractModal: React.FC<DraftContractModalProps> = ({
         title: 'New Milestone Deliverable',
         amount: '25.00',
         check_type: 'github_ci',
-        check_config: { repo: 'org/repo' },
+        check_config: { repo: '' },
         acceptance: 'Automated CI checks pass on submitted PR',
       },
     ]);
