@@ -55,8 +55,12 @@ const CreateContract = ContractDraft.extend({
   worker_paypal_email: z.string().email(),
 });
 
+const AMOUNT = /^\d+(\.\d{1,2})?$/;
+
 app.post("/api/contracts", (req, res) => {
   const body = CreateContract.parse(req.body);
+  const bad = body.milestones.find((m) => !AMOUNT.test(m.amount.trim()) || cents(m.amount) <= 0);
+  if (bad) return res.status(400).json({ error: `Milestone "${bad.title}" needs a positive amount like 50 or 49.99 (got "${bad.amount}")` });
   const id = `ct_${randomUUID().slice(0, 8)}`;
   const total = body.milestones.reduce((s, m) => s + cents(m.amount), 0);
   db.prepare(`INSERT INTO contracts (id, title, description, client_name, worker_name, worker_paypal_email, currency, total)
@@ -110,38 +114,58 @@ app.get("/api/paypal/return", async (req, res) => {
   const c = getContract(id);
   if (!c?.paypal_order_id) return res.status(404).send("Unknown contract");
   if (!c.authorization_id) {
-    const auth = await paypal.authorizeOrder(c.paypal_order_id);
-    setContract(id, { authorization_id: auth.authorizationId, status: "funded" });
-    logEvent(id, "funded", `${c.total} ${c.currency} held in escrow`, undefined, auth);
+    try {
+      const auth = await paypal.authorizeOrder(c.paypal_order_id);
+      setContract(id, { authorization_id: auth.authorizationId, status: "funded" });
+      logEvent(id, "funded", `${c.total} ${c.currency} held in escrow`, undefined, auth);
+    } catch (e) {
+      logEvent(id, "error", `Funding did not complete: ${(e as Error).message}`);
+      return res.redirect(`${WEB_URL}/?contract=${id}&fund_error=1`);
+    }
   }
   res.redirect(`${WEB_URL}/?contract=${id}&funded=1`);
 });
 
 // ---------- milestones ----------
+// One money operation per milestone at a time (double clicks, two tabs).
+const busy = new Set<string>();
+async function exclusive<T>(id: string, res: express.Response, fn: () => Promise<T>) {
+  if (busy.has(id)) return void res.status(409).json({ error: "This milestone is already being processed" });
+  busy.add(id);
+  try {
+    res.json(await fn());
+  } finally {
+    busy.delete(id);
+  }
+}
+
 async function release(m: Milestone, reason: string) {
   const c = getContract(m.contract_id)!;
   if (!c.authorization_id) throw new Error("Contract is not funded");
-  const others = listMilestones(c.id).filter((x) => x.id !== m.id && !["released", "rejected"].includes(x.status));
-  const cap = await paypal.captureMilestone(c.authorization_id, c.currency, m.amount, others.length === 0, m.id);
-  setMilestone(m.id, { capture_id: cap.captureId }); // keep it even if the payout below fails; a retry reuses it
-  logEvent(c.id, "captured", `Captured ${m.amount} ${c.currency} for "${m.title}"`, m.id, cap);
+  let captureId = m.capture_id;
+  if (!captureId) {
+    const others = listMilestones(c.id).filter((x) => x.id !== m.id && !["released", "rejected"].includes(x.status));
+    const cap = await paypal.captureMilestone(c.authorization_id, c.currency, m.amount, others.length === 0, m.id);
+    captureId = cap.captureId;
+    setMilestone(m.id, { capture_id: captureId }); // kept even if the payout below fails; a retry only re-sends the payout
+    logEvent(c.id, "captured", `Captured ${m.amount} ${c.currency} for "${m.title}"`, m.id, cap);
+  }
   const payout = await paypal.payoutToWorker({
     milestoneId: m.id, email: c.worker_paypal_email, currency: c.currency, amount: m.amount,
     note: `${c.title} - ${m.title}: ${reason}`,
   });
-  setMilestone(m.id, { status: "released", capture_id: cap.captureId, payout_batch_id: payout.batchId });
+  setMilestone(m.id, { status: "released", payout_batch_id: payout.batchId });
   logEvent(c.id, "released", `Paid ${m.amount} ${c.currency} to ${c.worker_name}`, m.id, payout);
-  await finishIfDone(c.id);
+  await finishIfDone(c.id, false);
 }
 
-async function finishIfDone(contractId: string) {
+// settledByReject: the milestone that closed the contract was rejected. In that case no capture
+// carried final_capture=true, so whatever is still authorized must be voided back to the client.
+async function finishIfDone(contractId: string, settledByReject: boolean) {
   const ms = listMilestones(contractId);
   if (!ms.every((m) => ["released", "rejected"].includes(m.status))) return;
   const c = getContract(contractId)!;
-  const anyRejected = ms.some((m) => m.status === "rejected");
-  const lastWasRejected = ms.reduce((a, b) => (a.updated_at > b.updated_at ? a : b)).status === "rejected";
-  if (anyRejected && lastWasRejected && c.authorization_id) {
-    // No final capture happened, so the rest of the hold is still open: hand it back.
+  if (settledByReject && c.authorization_id) {
     try {
       await paypal.voidAuthorization(c.authorization_id);
       logEvent(contractId, "voided", "Remaining held funds released back to the client");
@@ -154,15 +178,18 @@ async function finishIfDone(contractId: string) {
 }
 
 app.post("/api/milestones/:id/submit", async (req, res) => {
-  const { submission } = z.object({ submission: z.string().min(1) }).parse(req.body);
+  const { submission } = z.object({ submission: z.string().trim().min(1) }).parse(req.body);
   const m = getMilestone(req.params.id);
   if (!m) return res.status(404).json({ error: "not found" });
   const c = getContract(m.contract_id)!;
   if (c.status !== "funded") return res.status(409).json({ error: "Contract must be funded before work is submitted" });
   if (["released", "rejected"].includes(m.status)) return res.status(409).json({ error: `milestone already ${m.status}` });
-  setMilestone(m.id, { submission, status: "submitted" });
-  logEvent(c.id, "submitted", `${c.worker_name} submitted "${m.title}"`, m.id, { submission });
-  res.json(await verifyMilestone(m.id));
+  if (m.capture_id) return res.status(409).json({ error: "This milestone already passed and its money is captured; use retry to resend the payout" });
+  await exclusive(m.id, res, async () => {
+    setMilestone(m.id, { submission, status: "submitted" });
+    logEvent(c.id, "submitted", `${c.worker_name} submitted "${m.title}"`, m.id, { submission });
+    return verifyMilestone(m.id);
+  });
 });
 
 async function verifyMilestone(id: string) {
@@ -193,7 +220,14 @@ app.post("/api/milestones/:id/verify", async (req, res) => {
   if (!m) return res.status(404).json({ error: "not found" });
   if (!m.submission) return res.status(409).json({ error: "nothing submitted yet" });
   if (["released", "rejected"].includes(m.status)) return res.status(409).json({ error: `milestone already ${m.status}` });
-  res.json(await verifyMilestone(m.id));
+  await exclusive(m.id, res, async () => {
+    // Money already captured (the payout failed last time): don't re-judge the work, just pay.
+    if (m.capture_id) {
+      await release(m, "Retrying payout for a milestone that already passed");
+      return { result: { passed: true, summary: "Payout retried", evidence: null }, explanation: m.ai_summary, contract: contractView(m.contract_id) };
+    }
+    return verifyMilestone(m.id);
+  });
 });
 
 // Human override: the client can release despite a failed check, or reject and get that share back.
@@ -202,13 +236,18 @@ app.post("/api/milestones/:id/override", async (req, res) => {
   const m = getMilestone(req.params.id);
   if (!m) return res.status(404).json({ error: "not found" });
   if (["released", "rejected"].includes(m.status)) return res.status(409).json({ error: `milestone already ${m.status}` });
-  logEvent(m.contract_id, "override", `Client chose to ${action}: ${reason}`, m.id);
-  if (action === "release") await release(m, `Approved by client: ${reason}`);
-  else {
-    setMilestone(m.id, { status: "rejected" });
-    await finishIfDone(m.contract_id);
-  }
-  res.json(contractView(m.contract_id));
+  if (getContract(m.contract_id)!.status !== "funded") return res.status(409).json({ error: "Contract is not funded" });
+  if (action === "reject" && m.capture_id)
+    return res.status(409).json({ error: "This milestone's money is already captured, so it can't be refunded by rejecting; release it instead" });
+  await exclusive(m.id, res, async () => {
+    logEvent(m.contract_id, "override", `Client chose to ${action}: ${reason}`, m.id);
+    if (action === "release") await release(m, `Approved by client: ${reason}`);
+    else {
+      setMilestone(m.id, { status: "rejected" });
+      await finishIfDone(m.contract_id, true);
+    }
+    return contractView(m.contract_id);
+  });
 });
 
 // ---------- dashboard (production) ----------

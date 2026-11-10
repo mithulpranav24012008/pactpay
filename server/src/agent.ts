@@ -62,6 +62,7 @@ export const ContractDraft = z.object({
     amount: z.string().describe("Decimal string with 2 places, e.g. \"150.00\""),
     check_type: z.enum(["github_ci", "http", "manual"]),
     check_config: z.object({
+      repo: z.string().optional().describe("For github_ci: the repository as owner/name, taken from the brief"),
       require_merged: z.boolean().optional(),
       url: z.string().optional(),
       expect_status: z.number().optional(),
@@ -74,7 +75,7 @@ export type ContractDraft = z.infer<typeof ContractDraft>;
 
 const DRAFT_SYSTEM = `You turn a client's job brief into an escrow contract for PactPay.
 Split the work into 1-5 milestones whose amounts add up exactly to the budget.
-Prefer checks a machine can verify: "github_ci" (worker submits a pull request; pays when CI passes),
+Prefer checks a machine can verify: "github_ci" (worker submits a pull request; pays when CI passes; set check_config.repo to owner/name from the brief),
 "http" (worker deploys; pays when the URL responds as expected, put the URL in check_config.url if known).
 Use "manual" only when nothing can be checked automatically. Leave require_merged false unless the brief asks for a merge. Keep titles short.
 Use the budget's currency (default USD).`;
