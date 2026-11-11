@@ -54,13 +54,13 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ contracts }) =
           stroke: '#e11d48',
         },
       ],
-      axes: [
-        {
+      axes: {
+        x: {
           type: 'category',
           position: 'bottom',
           label: { color: '#94a3b8', fontSize: 10, rotation: -20 },
         },
-        {
+        y: {
           type: 'number',
           position: 'left',
           label: {
@@ -70,7 +70,7 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ contracts }) =
           },
           gridLine: { style: [{ stroke: '#1e293b', lineDash: [3, 3] }] },
         },
-      ],
+      },
       legend: {
         position: 'top',
         item: {
@@ -116,7 +116,7 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ contracts }) =
       },
       series: [
         {
-          type: 'pie',
+          type: 'donut',
           angleKey: 'count',
           legendItemKey: 'status',
           calloutLabelKey: 'status',

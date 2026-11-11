@@ -3,6 +3,7 @@ import { Navbar } from './components/Navbar';
 import { MetricsOverview } from './components/MetricsOverview';
 import { ContractMatrix } from './components/ContractMatrix';
 import { AnalyticsCharts } from './components/AnalyticsCharts';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { ContractDetailView } from './components/ContractDetailView';
 import { DraftContractModal } from './components/DraftContractModal';
 import { Contract } from './types';
@@ -100,7 +101,9 @@ export const App: React.FC = () => {
         <MetricsOverview contracts={contracts} />
 
         {/* AG Charts: Live Visual Telemetry */}
-        <AnalyticsCharts contracts={contracts} />
+        <ErrorBoundary label="Charts">
+          <AnalyticsCharts contracts={contracts} />
+        </ErrorBoundary>
 
         {/* AG Grid Contract Matrix */}
         <ContractMatrix
