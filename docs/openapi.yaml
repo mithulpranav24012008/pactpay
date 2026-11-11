@@ -298,11 +298,13 @@ components:
       allOf:
         - $ref: "#/components/schemas/ContractDraft"
         - type: object
-          required: [title, description, currency, milestones, client_name, worker_name, worker_paypal_email]
+          required: [title, description, currency, milestones, client_name, worker_name]
           properties:
             client_name: { type: string }
             worker_name: { type: string }
-            worker_paypal_email: { type: string, format: email, example: sb-v47iaq53833161@personal.example.com }
+            worker_paypal_email: { type: string, format: email, example: sb-v47iaq53833161@personal.example.com, description: Required when payout_rail is paypal }
+            payout_rail: { type: string, enum: [paypal, venmo], default: paypal, description: Venmo is live-only (sandbox does not support it) }
+            worker_venmo_phone: { type: string, description: "US mobile number, required when payout_rail is venmo" }
             created_via: { type: string, enum: [web, mcp] }
     Milestone:
       type: object
