@@ -68,6 +68,9 @@ export function Milestones({ contract, selectedId, hoveredId, onSelect, onHover,
               <span className={`pill pill-${pose}`}>{POSE_LABEL[pose]}</span>
             </button>
 
+            {m.capture_id && m.status !== 'released' && (
+              <p className="ms-meta"><span className="neg">Captured from the client, but the payout to the worker failed. Retry the payout.</span></p>
+            )}
             {(due || m.payout_status) && (
               <p className="ms-meta">
                 {due && <span className={overdue ? 'neg' : ''}>{due}{overdue ? ', refund on the next sweep' : ''}</span>}

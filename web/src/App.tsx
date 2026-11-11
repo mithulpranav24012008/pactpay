@@ -27,14 +27,13 @@ function Mark() {
 }
 
 const useReducedMotion = () => {
-  const q = typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
-  const [r, setR] = useState(q?.matches ?? false);
+  const [r, setR] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   useEffect(() => {
-    if (!q) return;
+    const q = window.matchMedia('(prefers-reduced-motion: reduce)');
     const f = () => setR(q.matches);
     q.addEventListener('change', f);
     return () => q.removeEventListener('change', f);
-  }, [q]);
+  }, []);
   return r;
 };
 
