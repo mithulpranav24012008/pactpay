@@ -1,153 +1,213 @@
-import React, { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
-import { MetricsOverview } from './components/MetricsOverview';
-import { ContractMatrix } from './components/ContractMatrix';
-import { AnalyticsCharts } from './components/AnalyticsCharts';
+// PactPay overview: where every escrowed dollar is, and what needs you next.
+// Layout (desktop): 55px rail · 32px pad · 306px book column · 24px gap · fluid detail column.
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { Contract, EventLog, Milestone } from './types';
+import { api, type Health } from './lib/api';
+import { cents, finding, money, STATUS_LABEL } from './lib/escrow';
+import { ContractList } from './components/ContractList';
+import { VaultCard } from './components/Vault';
+import { Milestones } from './components/Milestones';
+import { Activity } from './components/Activity';
+import { Ledger } from './components/Ledger';
+import { Flows } from './components/Flows';
+import { DisputeDialog, DraftDialog, OverrideDialog } from './components/Dialogs';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { ContractDetailView } from './components/ContractDetailView';
-import { DraftContractModal } from './components/DraftContractModal';
-import { Contract } from './types';
-import { CheckCircle2 } from 'lucide-react';
 
-export const App: React.FC = () => {
-  const [contracts, setContracts] = useState<Contract[]>([]);
-  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [toast, setToast] = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
+const REPO = 'https://github.com/mithulpranav24012008/pactpay';
 
+function Mark() {
+  // The vault seen from above: three segments, one lifted out (paid).
+  return (
+    <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+      <path d="M16 4a12 12 0 0 1 11.6 9H22a6 6 0 0 0-6-3.6z" fill="#f2f2f3" transform="translate(1.2 -1.2)" />
+      <path d="M27.6 15A12 12 0 0 1 9 26.4l2.9-4.9A6 6 0 0 0 22 15z" fill="#4a8ad6" />
+      <path d="M7.4 25.3A12 12 0 0 1 14 4.1V10a6 6 0 0 0-3.7 10.4z" fill="#3a3a3e" />
+    </svg>
+  );
+}
+
+const useReducedMotion = () => {
+  const q = typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  const [r, setR] = useState(q?.matches ?? false);
   useEffect(() => {
-    // Check URL parameters for PayPal return callback (?contract=...&funded=1 / cancelled=1 / fund_error=1)
-    const params = new URLSearchParams(window.location.search);
-    const contractParam = params.get('contract');
-    const fundedParam = params.get('funded');
-    const cancelledParam = params.get('cancelled');
-    const fundErrorParam = params.get('fund_error');
+    if (!q) return;
+    const f = () => setR(q.matches);
+    q.addEventListener('change', f);
+    return () => q.removeEventListener('change', f);
+  }, [q]);
+  return r;
+};
 
-    if (contractParam) {
-      setSelectedContractId(contractParam);
-      if (fundedParam === '1') {
-        setToast({ type: 'success', message: `Contract ${contractParam} successfully funded via PayPal Escrow!` });
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else if (cancelledParam === '1') {
-        setToast({ type: 'warning', message: `PayPal funding for contract ${contractParam} was cancelled. Escrow not funded.` });
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else if (fundErrorParam === '1') {
-        setToast({ type: 'error', message: `PayPal funding failed for contract ${contractParam}. Please retry.` });
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
+export function App() {
+  const [contracts, setContracts] = useState<Contract[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [health, setHealth] = useState<Health | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [milestone, setMilestone] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [events, setEvents] = useState<EventLog[]>([]);
+  const [notice, setNotice] = useState<{ tone: 'pos' | 'neg' | 'warn'; text: string } | null>(null);
+  const [drafting, setDrafting] = useState(false);
+  const [overriding, setOverriding] = useState<{ m: Milestone; action?: 'release' | 'reject' } | null>(null);
+  const [disputing, setDisputing] = useState<Milestone | null>(null);
+  const [funding, setFunding] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const reduced = useReducedMotion();
+
+  const load = useCallback(async () => {
+    try {
+      const cs = await api.contracts();
+      setContracts(cs);
+      setLoadError(null);
+      setSelected((s) => (s && cs.some((c) => c.id === s) ? s : cs[0]?.id ?? null));
+    } catch (e) {
+      setLoadError((e as Error).message);
     }
-
-    fetchContracts(false);
-    const interval = setInterval(() => fetchContracts(true), 5000);
-    return () => clearInterval(interval);
   }, []);
 
-  const fetchContracts = async (silent = false) => {
-    if (!silent) setIsRefreshing(true);
-    try {
-      const res = await fetch('/api/contracts');
-      if (res.ok) {
-        const data: Contract[] = await res.json();
-        setContracts(data);
-        if (data.length > 0) {
-          setSelectedContractId((prev) => (prev && data.some((c) => c.id === prev) ? prev : data[0].id));
-        }
-      }
-    } catch (e) {
-      console.error('Error fetching contracts:', e);
-    } finally {
-      if (!silent) setIsRefreshing(false);
-    }
+  useEffect(() => {
+    load();
+    api.health().then(setHealth).catch(() => setHealth({ ok: false, paypal: false, ai: false }));
+    const p = new URLSearchParams(location.search);
+    const id = p.get('contract');
+    if (id) setSelected(id);
+    if (p.get('funded') === '1') setNotice({ tone: 'pos', text: 'PayPal approved the payment. The money is now held in escrow.' });
+    if (p.get('cancelled') === '1') setNotice({ tone: 'warn', text: 'Funding was cancelled in PayPal. Nothing was charged.' });
+    if (p.get('fund_error') === '1') setNotice({ tone: 'neg', text: 'PayPal could not hold the payment. Nothing was charged; try funding again.' });
+    if (id) history.replaceState(null, '', location.pathname);
+    const poll = setInterval(load, 5000);
+    const tick = setInterval(() => setNow(Date.now()), 30000);
+    return () => { clearInterval(poll); clearInterval(tick); };
+  }, [load]);
+
+  useEffect(() => {
+    if (!selected) return setEvents([]);
+    api.events(selected).then(setEvents).catch(() => setEvents([]));
+  }, [selected, contracts]);
+
+  const contract = contracts?.find((c) => c.id === selected) ?? null;
+  const lead = useMemo(() => finding(contracts ?? [], now), [contracts, now]);
+  const fail = (text: string) => setNotice({ tone: 'neg', text });
+
+  const fund = async () => {
+    if (!contract) return;
+    setFunding(true);
+    try { location.href = (await api.fund(contract.id)).approveUrl; } catch (e) { fail((e as Error).message); setFunding(false); }
   };
 
-  const selectedContract = contracts.find((c) => c.id === selectedContractId) || contracts[0] || null;
+  const open = (contractId: string, milestoneId?: string) => {
+    setSelected(contractId);
+    setMilestone(milestoneId ?? null);
+    document.getElementById('contract')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      <Navbar
-        onOpenCreate={() => setIsCreateModalOpen(true)}
-        onRefresh={() => fetchContracts(false)}
-        isRefreshing={isRefreshing}
-      />
+    <div className="shell">
+      <nav className="rail" aria-label="PactPay">
+        <a className="rail-mark" href="#top" aria-label="PactPay overview"><Mark /></a>
+        <a className="rail-link is-active" href="#top" aria-label="Escrow overview" title="Escrow overview">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4" /></svg>
+        </a>
+        <a className="rail-link" href="#ledger" aria-label="Ledger" title="Ledger">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </a>
+        <a className="rail-link" href={`${REPO}/blob/master/docs/openapi.yaml`} target="_blank" rel="noreferrer" aria-label="API reference" title="API reference">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5" /></svg>
+        </a>
+        <a className="rail-link" href={`${REPO}#-for-ai-agents-pactpay-mcp-server`} target="_blank" rel="noreferrer" aria-label="Connect an AI agent (MCP)" title="Connect an AI agent (MCP)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="7" width="14" height="11" rx="3" /><path d="M12 3v4M9 12h.01M15 12h.01" /></svg>
+        </a>
+        <div className="rail-status" aria-label="Connections">
+          <span className={`dot ${health?.paypal ? 'on' : ''}`} title={health?.paypal ? 'PayPal sandbox connected' : 'PayPal not configured'} />
+          <span className={`dot ${health?.ai ? 'on' : ''}`} title={health?.ai ? 'Gemini connected' : 'Gemini not configured'} />
+        </div>
+      </nav>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        
-        {/* PayPal Notification Toast Banner */}
-        {toast && (
-          <div
-            className={`border px-4 py-3 rounded-xl flex items-center justify-between shadow-lg transition ${
-              toast.type === 'success'
-                ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
-                : toast.type === 'warning'
-                ? 'bg-amber-950/80 border-amber-500/40 text-amber-300'
-                : 'bg-rose-950/80 border-rose-500/40 text-rose-300'
-            }`}
-          >
-            <div className="flex items-center space-x-2 text-sm font-semibold">
-              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-              <span>{toast.message}</span>
-            </div>
-            <button
-              onClick={() => setToast(null)}
-              className="text-xs hover:text-white underline ml-4 flex-shrink-0"
-            >
-              Dismiss
-            </button>
+      <main className="canvas" id="top">
+        <header className="title-row">
+          <div>
+            <h1>PactPay escrow</h1>
+            <p className="lead">
+              {lead.contractId ? <button className="link lead-link" onClick={() => open(lead.contractId!, lead.milestoneId)}>{lead.text}</button> : lead.text}
+            </p>
+          </div>
+          <div className="title-tools">
+            <span className="muted conn">PayPal sandbox {health?.paypal ? 'connected' : 'not configured'} · Gemini {health?.ai ? 'connected' : 'off'}</span>
+            <button className="btn btn-primary" onClick={() => setDrafting(true)}>Draft a contract</button>
+          </div>
+        </header>
+
+        {notice && (
+          <div className={`notice notice-${notice.tone}`} role="status">
+            <span>{notice.text}</span>
+            <button className="link" onClick={() => setNotice(null)}>Dismiss</button>
           </div>
         )}
 
-        {/* Top KPIs */}
-        <MetricsOverview contracts={contracts} />
+        {loadError && !contracts && <div className="notice notice-neg" role="alert">Cannot reach the PactPay API: {loadError}. Start it with npm run dev:server.</div>}
+        {!contracts && !loadError && <div className="loading" aria-busy="true">Loading contracts…</div>}
 
-        {/* AG Charts: Live Visual Telemetry */}
-        <ErrorBoundary label="Charts">
-          <AnalyticsCharts contracts={contracts} />
-        </ErrorBoundary>
+        {contracts && (
+          <div className="board">
+            <ContractList contracts={contracts} selectedId={selected} onSelect={(id) => open(id)} />
 
-        {/* AG Grid Contract Matrix */}
-        <ContractMatrix
-          contracts={contracts}
-          selectedContractId={selectedContractId}
-          onSelectContract={(c) => setSelectedContractId(c.id)}
-        />
+            <div className="detail">
+              {contract ? (
+                <section className="card contract" id="contract" aria-labelledby="ct-h">
+                  <header className="contract-head">
+                    <div>
+                      <h2 id="ct-h">{contract.title}{contract.created_via === 'mcp' && <span className="tag">Opened by an AI agent</span>}</h2>
+                      <p className="muted">
+                        {contract.client_name} pays {contract.worker_name} · {STATUS_LABEL[contract.status] ?? contract.status}
+                        {' · '}<span className="num">{money(cents(contract.totals.released), contract.currency)}</span> paid,{' '}
+                        <span className="num">{money(cents(contract.totals.returned), contract.currency)}</span> returned
+                      </p>
+                    </div>
+                    {(contract.status === 'draft' || contract.status === 'awaiting_payment') && (
+                      <button className="btn btn-primary" onClick={fund} disabled={funding}>
+                        {funding ? 'Opening PayPal…' : `Fund ${money(cents(contract.total), contract.currency)} with PayPal`}
+                      </button>
+                    )}
+                  </header>
+                  <div className="contract-body">
+                    <ErrorBoundary label="Vault">
+                      <VaultCard contract={contract} selectedId={milestone} hoveredId={hovered}
+                        onSelect={setMilestone} onHover={setHovered} reduced={reduced} />
+                    </ErrorBoundary>
+                    <Milestones
+                      contract={contract} selectedId={milestone} hoveredId={hovered} now={now}
+                      onSelect={setMilestone} onHover={setHovered} onChanged={load} onError={fail}
+                      onOverride={(m) => setOverriding({ m })} onDispute={setDisputing}
+                    />
+                  </div>
+                </section>
+              ) : (
+                <section className="card contract empty-state" id="contract">
+                  <h2>No contract selected</h2>
+                  <p className="muted">Draft one from a plain-English brief; Gemini proposes milestones a machine can check.</p>
+                  <button className="btn btn-primary" onClick={() => setDrafting(true)}>Draft a contract</button>
+                </section>
+              )}
 
-        {/* Selected Contract Detail Inspector & Actions */}
-        {selectedContract ? (
-          <ContractDetailView
-            contract={selectedContract}
-            onRefresh={() => fetchContracts(false)}
-          />
-        ) : (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-12 text-center space-y-4 shadow-xl">
-            <div className="w-16 h-16 bg-blue-500/10 text-cyan-400 rounded-2xl flex items-center justify-center mx-auto border border-blue-500/20">
-              <CheckCircle2 className="w-8 h-8" />
+              <div className="pair">
+                <ErrorBoundary label="Chart"><Flows contracts={contracts} /></ErrorBoundary>
+                <Activity events={events} />
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-white">No Escrow Contracts Found</h3>
-              <p className="text-sm text-slate-400 max-w-md mx-auto mt-1">
-                Draft a new autonomous contract with Gemini AI or seed demo contracts to test PayPal Escrow authorization, capture, and payouts.
-              </p>
+
+            <div id="ledger" className="ledger-wrap">
+              <ErrorBoundary label="Ledger"><Ledger contracts={contracts} onOpen={open} /></ErrorBoundary>
             </div>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-6 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl shadow-lg shadow-blue-500/20 transition"
-            >
-              Draft Contract with AI
-            </button>
           </div>
         )}
       </main>
 
-      {/* AI Contract Drafter Modal */}
-      <DraftContractModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onContractCreated={(id) => {
-          fetchContracts(false);
-          setSelectedContractId(id);
-        }}
-      />
+      <DraftDialog open={drafting} onClose={() => setDrafting(false)} onError={fail}
+        onCreated={(c) => { setDrafting(false); load(); open(c.id); setNotice({ tone: 'pos', text: `Created “${c.title}”. Fund it with PayPal to hold the money.` }); }} />
+      <OverrideDialog milestone={overriding?.m ?? null} initial={overriding?.action} currency={contract?.currency ?? 'USD'}
+        onClose={() => setOverriding(null)} onError={fail} onDone={() => { setOverriding(null); load(); }} />
+      <DisputeDialog milestone={disputing} onClose={() => setDisputing(null)} onError={fail}
+        onDecide={(a) => { const m = disputing; setDisputing(null); if (m) setOverriding({ m, action: a }); }} />
     </div>
   );
-};
+}

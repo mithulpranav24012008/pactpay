@@ -12,3 +12,4 @@ venv/
 .playwright-mcp
 graphify-out
 pactpay_state.json
+.taste-skill/
