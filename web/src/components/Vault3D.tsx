@@ -107,7 +107,7 @@ function VaultBody() {
   const ring = useMemo(() => {
     const pts = Array.from({ length: 129 }, (_, i) => {
       const a = (i / 128) * Math.PI * 2;
-      return new THREE.Vector3(Math.cos(a) * 1.82, 0.001, Math.sin(a) * 1.82);
+      return new THREE.Vector3(Math.cos(a) * 1.82, 0.004, Math.sin(a) * 1.82);
     });
     return new THREE.BufferGeometry().setFromPoints(pts);
   }, []);
@@ -117,10 +117,6 @@ function VaultBody() {
       <mesh position={[0, -0.09, 0]}>
         <cylinderGeometry args={[1.9, 1.95, 0.18, 96]} />
         <meshStandardMaterial color="#e3e8ef" roughness={0.9} />
-      </mesh>
-      <mesh position={[0, 0.0, 0]} rotation-x={-Math.PI / 2}>
-        <circleGeometry args={[0.92, 64]} />
-        <meshStandardMaterial color="#f5f7fa" roughness={1} />
       </mesh>
       <lineLoop geometry={ring}>
         <lineBasicMaterial color="#c5ccd6" />

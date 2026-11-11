@@ -61,7 +61,7 @@ export function vaultSegments(c: Contract, gap = 0.06): Segment[] {
 export function poseTarget(p: Pose) {
   switch (p) {
     case 'released': return { lift: 0.48, push: 0.14, opacity: 1 };
-    case 'returned': return { lift: -0.42, push: 0.1, opacity: 1 };
+    case 'returned': return { lift: 0, push: 0.34, opacity: 0.9 }; // slides out of the vault, back toward the client
     case 'checking': return { lift: 0.18, push: 0, opacity: 1 };
     case 'failed': return { lift: 0.06, push: 0, opacity: 1 };
     case 'unfunded': return { lift: 0, push: 0, opacity: 0.35 };
