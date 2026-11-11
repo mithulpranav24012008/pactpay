@@ -157,7 +157,9 @@ select.field { appearance: none; padding-right: 30px; background-repeat: no-repe
 .book-row:hover { background: var(--raised); }
 .book-row.is-selected { background: var(--raised); }
 .book-row.is-selected::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 1px; background: var(--accent); }
-.book-title { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.book-title { display: flex; align-items: center; min-width: 0; font-size: 14px; font-weight: 500; }
+.book-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.book-title .tag { flex-shrink: 0; margin-left: 8px; vertical-align: 0; }
 .book-val { font-size: 14px; text-align: right; }
 .book-sub { font-size: var(--fs-small); color: var(--muted); }
 .book-sub.num { text-align: right; }

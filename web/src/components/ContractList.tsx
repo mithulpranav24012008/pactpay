@@ -40,7 +40,7 @@ export function ContractList({ contracts, selectedId, onSelect }: { contracts: C
           <li key={c.id}>
             <button className={`book-row ${c.id === selectedId ? 'is-selected' : ''}`} onClick={() => onSelect(c.id)} aria-current={c.id === selectedId}>
               <span className="book-title">
-                {c.title}
+                <span className="book-name">{c.title}</span>
                 {c.created_via === 'mcp' && <span className="tag">Agent</span>}
               </span>
               <span className="book-val num">{money(cents(c.status === 'funded' ? c.totals.held : c.total), c.currency)}</span>
