@@ -52,10 +52,7 @@ app.post("/api/agent/draft", async (req, res) => {
 const CreateContract = ContractDraft.extend({
   client_name: z.string(),
   worker_name: z.string(),
-  worker_paypal_email: z.string().email().optional().or(z.literal("")),
-  // How the worker gets paid: PayPal (email) or Venmo (US mobile number). Venmo payouts are USD only.
-  payout_rail: z.enum(["paypal", "venmo"]).default("paypal"),
-  worker_venmo_phone: z.string().optional(),
+  worker_paypal_email: z.string().email(),
   created_via: z.enum(["web", "mcp"]).optional(),
   milestones: z.array(ContractDraft.shape.milestones.element.extend({
     // Optional deadline (ISO 8601). If nothing has passed by then, that share goes back to the client.
@@ -69,26 +66,11 @@ app.post("/api/contracts", (req, res) => {
   const body = CreateContract.parse(req.body);
   const bad = body.milestones.find((m) => !AMOUNT.test(m.amount.trim()) || cents(m.amount) <= 0);
   if (bad) return res.status(400).json({ error: `Milestone "${bad.title}" needs a positive amount like 50 or 49.99 (got "${bad.amount}")` });
-  const currency = (body.currency || "USD").toUpperCase();
-  let venmoPhone: string | null = null;
-  if (body.payout_rail === "venmo") {
-    // PayPal's sandbox rejects Venmo payouts ("Recipient wallet not supported in sandbox"), so refuse
-    // up front instead of letting a milestone pass and then fail to pay.
-    if ((process.env.PAYPAL_API_BASE ?? "https://api-m.sandbox.paypal.com").includes("sandbox"))
-      return res.status(400).json({ error: "Venmo payouts only work with live PayPal; the PayPal sandbox does not support them. Use PayPal email payouts for testing." });
-    const digits = (body.worker_venmo_phone ?? "").replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
-    if (!/^\d{10}$/.test(digits)) return res.status(400).json({ error: "Venmo payouts need the worker's US mobile number (10 digits)" });
-    if (currency !== "USD") return res.status(400).json({ error: "Venmo payouts are USD only" });
-    venmoPhone = digits;
-  } else if (!body.worker_paypal_email) {
-    return res.status(400).json({ error: "PayPal payouts need the worker's PayPal email" });
-  }
   const id = `ct_${randomUUID().slice(0, 8)}`;
   const total = body.milestones.reduce((s, m) => s + cents(m.amount), 0);
-  db.prepare(`INSERT INTO contracts (id, title, description, client_name, worker_name, worker_paypal_email, currency, total, created_via, payout_rail, worker_venmo_phone)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run(id, body.title, body.description, body.client_name, body.worker_name, body.worker_paypal_email ?? "", currency, money(total),
-      body.created_via ?? "web", body.payout_rail, venmoPhone);
+  db.prepare(`INSERT INTO contracts (id, title, description, client_name, worker_name, worker_paypal_email, currency, total, created_via)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(id, body.title, body.description, body.client_name, body.worker_name, body.worker_paypal_email, body.currency || "USD", money(total), body.created_via ?? "web");
   body.milestones.forEach((m, i) => {
     db.prepare(`INSERT INTO milestones (id, contract_id, position, title, amount, check_type, check_config, due_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
@@ -174,12 +156,11 @@ async function release(m: Milestone, reason: string) {
     logEvent(c.id, "captured", `Captured ${m.amount} ${c.currency} for "${m.title}"`, m.id, cap);
   }
   const payout = await paypal.payoutToWorker({
-    milestoneId: m.id, currency: c.currency, amount: m.amount,
-    rail: c.payout_rail, email: c.worker_paypal_email, venmoPhone: c.worker_venmo_phone,
+    milestoneId: m.id, email: c.worker_paypal_email, currency: c.currency, amount: m.amount,
     note: `${c.title} - ${m.title}: ${reason}`,
   });
   setMilestone(m.id, { status: "released", capture_id: captureId, payout_batch_id: payout.batchId, payout_status: payout.status });
-  logEvent(c.id, "released", `Paid ${m.amount} ${c.currency} to ${c.worker_name} via ${c.payout_rail === "venmo" ? "Venmo" : "PayPal"}`, m.id, payout);
+  logEvent(c.id, "released", `Paid ${m.amount} ${c.currency} to ${c.worker_name}`, m.id, payout);
   await finishIfDone(c.id, false);
 }
 

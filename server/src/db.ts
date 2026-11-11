@@ -49,8 +49,6 @@ for (const sql of [
   "ALTER TABLE milestones ADD COLUMN due_at TEXT",
   "ALTER TABLE milestones ADD COLUMN payout_status TEXT",
   "ALTER TABLE contracts ADD COLUMN created_via TEXT NOT NULL DEFAULT 'web'",
-  "ALTER TABLE contracts ADD COLUMN payout_rail TEXT NOT NULL DEFAULT 'paypal'",
-  "ALTER TABLE contracts ADD COLUMN worker_venmo_phone TEXT",
 ]) {
   try { db.exec(sql); } catch { /* column exists */ }
 }
@@ -64,7 +62,6 @@ export interface Contract {
   worker_paypal_email: string; currency: string; total: string; status: ContractStatus;
   paypal_order_id: string | null; authorization_id: string | null; created_at: string;
   created_via: string;
-  payout_rail: "paypal" | "venmo"; worker_venmo_phone: string | null;
 }
 export interface Milestone {
   id: string; contract_id: string; position: number; title: string; amount: string;

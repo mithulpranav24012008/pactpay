@@ -132,14 +132,7 @@ export async function voidAuthorization(authorizationId: string) {
 }
 
 /** Pay the worker their share of a captured milestone. */
-/** Pay the worker to their PayPal email, or to their Venmo account by US phone number. */
-export async function payoutToWorker(opts: {
-  milestoneId: string; currency: string; amount: string; note: string;
-  rail?: "paypal" | "venmo"; email?: string; venmoPhone?: string | null;
-}) {
-  const recipient = opts.rail === "venmo"
-    ? { recipient_type: "PHONE", receiver: opts.venmoPhone, recipient_wallet: "VENMO" }
-    : { recipient_type: "EMAIL", receiver: opts.email };
+export async function payoutToWorker(opts: { milestoneId: string; email: string; currency: string; amount: string; note: string }) {
   const res = await call<{ batch_header: { payout_batch_id: string; batch_status: string } }>(
     "payout", "POST", "/v1/payments/payouts",
     {
@@ -149,7 +142,8 @@ export async function payoutToWorker(opts: {
         email_message: opts.note.slice(0, 255),
       },
       items: [{
-        ...recipient,
+        recipient_type: "EMAIL",
+        receiver: opts.email,
         amount: { currency: opts.currency, value: opts.amount },
         note: opts.note.slice(0, 4000),
         sender_item_id: opts.milestoneId,

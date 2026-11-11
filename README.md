@@ -126,7 +126,6 @@ The agent can post a job, hand a human the PayPal approval link, submit work and
 - [`docs/pactpay.postman_collection.json`](docs/pactpay.postman_collection.json): import into **Postman** (File → Import) to call every endpoint with example bodies; `baseUrl` defaults to `http://localhost:4000`. Also runs headless: `npx newman run docs/pactpay.postman_collection.json --folder System`.
 
 ## Known limitations
-- **Venmo payouts** (`payout_rail: "venmo"`, worker's US mobile number) are implemented with PayPal Payouts' `recipient_wallet: VENMO`, but PayPal's sandbox rejects them ("Recipient wallet not supported in sandbox"), so they are disabled in sandbox mode and untested; PayPal email payouts are fully tested.
 - The API has no authentication: it is a local demo for judging. A production version would authenticate clients and workers and scope overrides to the client.
 - PayPal authorizations are honored for 3 days; milestones captured later may need re-authorization.
 - A "partial settlement" AI recommendation is advisory; there is no one-click partial release yet.

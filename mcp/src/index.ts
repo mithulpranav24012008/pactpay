@@ -31,7 +31,7 @@ const fail = (e: unknown) => ({ isError: true, content: [{ type: "text" as const
 function brief(c: any) {
   return {
     id: c.id, title: c.title, status: c.status, created_via: c.created_via,
-    worker: c.worker_name, paid_via: c.payout_rail, total: `${c.total} ${c.currency}`, totals: c.totals,
+    worker: c.worker_name, total: `${c.total} ${c.currency}`, totals: c.totals,
     milestones: c.milestones.map((m: any) => ({
       id: m.id, title: m.title, amount: m.amount, check: m.check_type, status: m.status,
       due_at: m.due_at, verdict: m.ai_summary, payout_status: m.payout_status,
@@ -70,10 +70,7 @@ server.registerTool("create_contract", {
   description: "Create a PactPay contract between a client and a worker. Amounts must add up to what the client will fund. Returns the contract id.",
   inputSchema: {
     title: z.string(), description: z.string().default(""), currency: z.string().default("USD"),
-    client_name: z.string(), worker_name: z.string(),
-    payout_rail: z.enum(["paypal", "venmo"]).default("paypal").describe("Pay the worker by PayPal email or by Venmo (US mobile number, USD only)"),
-    worker_paypal_email: z.string().email().optional().describe("Required for payout_rail=paypal"),
-    worker_venmo_phone: z.string().optional().describe("Required for payout_rail=venmo: worker's US mobile number"),
+    client_name: z.string(), worker_name: z.string(), worker_paypal_email: z.string().email(),
     milestones: z.array(Milestone).min(1),
   },
 }, async (args) => {
