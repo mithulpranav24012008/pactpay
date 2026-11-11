@@ -31,7 +31,7 @@ The AI drafts and explains. It never decides whether money moves: deterministic 
 All four money paths were run against the real PayPal sandbox: fund, fail and hold, pass and pay, reject and refund.
 
 ## What's next
-Webhooks instead of polling, more check types (test reports, Lighthouse scores, signed agent attestations), Venmo payouts, and an MCP server so any AI agent can open and fund a PactPay contract itself.
+Webhooks instead of polling, more check types (test reports, Lighthouse scores, signed agent attestations), and an MCP server so any AI agent can open and fund a PactPay contract itself.
 
 ## Built with
 paypal, paypal-server-sdk, paypal-payouts, gemini, typescript, node.js, express, sqlite, react, vite, ag-grid, github-api
