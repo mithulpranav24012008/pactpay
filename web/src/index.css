@@ -54,6 +54,8 @@ a { color: inherit; }
 
 /* ---------- shell: icon rail + canvas ---------- */
 .shell { display: grid; grid-template-columns: var(--rail) 1fr; min-height: 100vh; }
+/* the rail's navy runs the full height of the page, not just the first screen */
+.shell::before { content: ""; position: fixed; inset: 0 auto 0 0; width: var(--rail); background: var(--navy); z-index: -1; }
 .rail {
   position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; align-items: center;
   gap: 6px; padding: 14px 0; background: var(--navy);
@@ -118,9 +120,9 @@ select.field { appearance: none; padding-right: 30px; background-repeat: no-repe
 /* ---------- board: grid arithmetic ----------
    canvas content = viewport − 55 rail − 2×32 pad. Columns: 306 + 24 + (rest). The ledger spans both,
    so every card lands on the same two outer edges. */
-.board { display: grid; grid-template-columns: 306px minmax(0, 1fr); gap: var(--gap); align-items: start; }
+.board { display: grid; grid-template-columns: 306px minmax(0, 1fr); gap: var(--gap); align-items: stretch; }
 .ledger-wrap { grid-column: 1 / -1; }
-.detail { display: grid; gap: var(--gap); min-width: 0; }
+.detail { display: grid; grid-template-rows: auto 1fr; gap: var(--gap); min-width: 0; }
 .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gap); align-items: stretch; }
 
 .card { background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow); min-width: 0; } /* taste-skill-ignore: the data-terminal sheet gives its dark cards this shadow */
@@ -138,7 +140,7 @@ select.field { appearance: none; padding-right: 30px; background-repeat: no-repe
 .ledger-wrap { animation-delay: 280ms !important; }
 
 /* ---------- the book column ---------- */
-.book { position: sticky; top: var(--pad); display: flex; flex-direction: column; max-height: calc(100vh - 2 * var(--pad)); }
+.book { display: flex; flex-direction: column; min-height: 0; }
 .book-head { padding: 20px 20px 16px; }
 .book-head h2 { font-size: 13px; font-weight: 500; color: var(--muted); }
 .book-figure { font-size: 40px; font-weight: 700; color: var(--navy); letter-spacing: -0.02em; line-height: 1.1; margin-top: 4px; }
@@ -151,7 +153,7 @@ select.field { appearance: none; padding-right: 30px; background-repeat: no-repe
 .tab:hover { color: var(--text); }
 .tab[aria-selected="true"] { color: var(--text); }
 .tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--accent); }
-.book-list { list-style: none; margin: 0; padding: 6px 0; overflow-y: auto; }
+.book-list { list-style: none; margin: 0; padding: 6px 0 12px; overflow-y: auto; flex: 1 1 0; min-height: 240px; }
 .book-row { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; width: 100%; padding: 10px 20px; text-align: left;
   background: none; border: 0; cursor: pointer; transition: background .15s; }
 .book-row:hover { background: var(--raised); }
@@ -168,7 +170,7 @@ select.field { appearance: none; padding-right: 30px; background-repeat: no-repe
 .contract-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 20px 20px 4px; }
 .contract-head h2 { font-size: var(--fs-section); font-weight: 600; letter-spacing: -0.01em; }
 .contract-head p { margin-top: 4px; }
-.contract-body { display: grid; grid-template-columns: minmax(280px, 0.95fr) minmax(0, 1.25fr); gap: var(--gap); padding: 8px 20px 20px; align-items: start; }
+.contract-body { display: grid; grid-template-columns: minmax(280px, 0.95fr) minmax(0, 1.25fr); gap: var(--gap); padding: 8px 20px 20px; align-items: center; }
 .empty-state { padding: 32px 20px; display: grid; gap: 12px; justify-items: start; }
 
 .vault { position: relative; display: grid; grid-template-rows: auto auto; }
@@ -267,13 +269,15 @@ select.field { appearance: none; padding-right: 30px; background-repeat: no-repe
 }
 @media (max-width: 900px) {
   .board { grid-template-columns: minmax(0, 1fr); }
-  .book { position: static; max-height: none; }
+  .book { min-height: 0; }
+  .book-list { flex: none; }
   .book-list { max-height: 320px; }
   .pair { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 640px) {
   :root { --pad: 16px; --gap: 16px; }
   .shell { grid-template-columns: 1fr; padding-bottom: 60px; }
+  .shell::before { display: none; }
   .rail { position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: 56px; flex-direction: row; justify-content: space-around;
     padding: 0 8px; border-right: 0; border-top: 1px solid var(--border); z-index: 10; }
   .rail-mark { margin: 0; }
