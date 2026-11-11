@@ -49,18 +49,22 @@ app.post("/api/agent/draft", async (req, res) => {
 });
 
 // ---------- contracts ----------
+const text = z.string().trim().min(1).max(200);
 const CreateContract = ContractDraft.extend({
-  client_name: z.string(),
-  worker_name: z.string(),
+  title: text,
+  client_name: text,
+  worker_name: text,
   worker_paypal_email: z.string().email(),
   created_via: z.enum(["web", "mcp"]).optional(),
   milestones: z.array(ContractDraft.shape.milestones.element.extend({
+    title: text,
     // Optional deadline (ISO 8601). If nothing has passed by then, that share goes back to the client.
     due_at: z.string().datetime({ offset: true }).nullish(),
   })).min(1),
 });
 
 const AMOUNT = /^\d+(\.\d{1,2})?$/;
+const MAX_TOTAL_CENTS = 100_000_00;
 
 app.post("/api/contracts", (req, res) => {
   const body = CreateContract.parse(req.body);
@@ -70,6 +74,8 @@ app.post("/api/contracts", (req, res) => {
   if (bad) return res.status(400).json({ error: `Milestone "${bad.title}" needs a positive amount like 50 or 49.99 (got "${bad.amount}")` });
   const id = `ct_${randomUUID().slice(0, 8)}`;
   const total = body.milestones.reduce((s, m) => s + cents(m.amount), 0);
+  // One escrow is one PayPal authorization; keep it inside what a single order can hold.
+  if (total > MAX_TOTAL_CENTS) return res.status(400).json({ error: `A contract can hold at most ${money(MAX_TOTAL_CENTS)} ${currency}` });
   db.prepare(`INSERT INTO contracts (id, title, description, client_name, worker_name, worker_paypal_email, currency, total, created_via)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
     .run(id, body.title, body.description, body.client_name, body.worker_name, body.worker_paypal_email, currency, money(total), body.created_via ?? "web");
@@ -392,7 +398,9 @@ if (SERVE_WEB) {
 
 // ---------- errors ----------
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  if (err instanceof z.ZodError) return res.status(400).json({ error: "invalid request", issues: err.issues });
+  if (err instanceof z.ZodError)
+    return res.status(400).json({ error: err.issues.map((i) => `${i.path.join(".") || "request"}: ${i.message}`).join("; "), issues: err.issues });
+  if ((err as { type?: string }).type === "entity.parse.failed") return res.status(400).json({ error: "The request body is not valid JSON" });
   if (err instanceof paypal.PayPalError) return res.status(502).json({ error: err.message, op: err.op });
   console.error(err);
   res.status(500).json({ error: (err as Error).message ?? "internal error" });

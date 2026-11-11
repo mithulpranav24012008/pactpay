@@ -15,12 +15,17 @@ export const aiConfigured = () => KEYS.length > 0;
 async function generate(system: string, prompt: string, jsonSchema?: unknown): Promise<string> {
   if (!KEYS.length) throw new Error("GEMINI_API_KEYS is not set");
   let lastErr: unknown;
+  // Whole-call budget: callers (the dashboard, MCP clients with a 60 s request timeout) must get an
+  // answer or an error well before they give up, however many models and keys are tried.
+  const deadline = Date.now() + 45_000;
   for (const model of MODELS) {
+    if (Date.now() > deadline) break;
     for (let attempt = 0; attempt < KEYS.length; attempt++) {
+      if (Date.now() > deadline) break;
       const ai = new GoogleGenAI({
         apiKey: KEYS[keyIndex],
         apiVersion: "v1beta",
-        httpOptions: { timeout: 30_000, retryOptions: { attempts: 1 } }, // we do our own fallback
+        httpOptions: { timeout: Math.max(5_000, Math.min(25_000, deadline - Date.now())), retryOptions: { attempts: 1 } }, // we do our own fallback
       });
       try {
         const res = await ai.models.generateContent({
@@ -50,7 +55,7 @@ async function generate(system: string, prompt: string, jsonSchema?: unknown): P
       }
     }
   }
-  throw lastErr;
+  throw lastErr ?? new Error("Gemini did not answer in time");
 }
 
 export const ContractDraft = z.object({

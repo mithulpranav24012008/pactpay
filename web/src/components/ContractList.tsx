@@ -52,7 +52,7 @@ export function ContractList({ contracts, selectedId, onSelect }: { contracts: C
             </button>
           </li>
         ))}
-        {!shown.length && <li className="muted empty">Nothing in this view.</li>}
+        {!shown.length && <li className="muted empty">{contracts.length ? 'Nothing in this view.' : 'No contracts yet.'}</li>}
       </ul>
     </section>
   );

@@ -85,6 +85,7 @@ export function Ledger({ contracts, onOpen }: { contracts: Contract[]; onOpen: (
           rowHeight={42}
           headerHeight={38}
           domLayout="autoHeight"
+          overlayNoRowsTemplate={'<span class="muted">No milestones yet. They appear here as soon as a contract is drafted.</span>'}
           pagination
           paginationPageSize={8}
           paginationPageSizeSelector={[8, 20, 50]}
