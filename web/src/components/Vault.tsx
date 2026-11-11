@@ -16,7 +16,7 @@ const hasWebGL = (() => {
 })();
 
 const SVG_COLOR: Record<Pose, string> = {
-  held: '#4a8ad6', checking: '#7fb0ea', failed: '#d9a441', released: '#f2f2f3', returned: '#e5566f', unfunded: '#3a3a3e',
+  held: '#0070e0', checking: '#5aa2ff', failed: '#e8a33d', released: '#003087', returned: '#d9363e', unfunded: '#c5ccd6',
 };
 
 function arcPath(s: Segment, rIn = 62, rOut = 96) {
@@ -30,7 +30,7 @@ function FlatVault({ segments, selectedId, onSelect }: { segments: Segment[]; se
   return (
     <svg viewBox="-110 -110 220 220" className="vault-flat" aria-hidden="true">
       {segments.map((s) => (
-        <path key={s.id} d={arcPath(s)} fill={SVG_COLOR[s.pose]} stroke={s.id === selectedId ? '#4a8ad6' : 'none'}
+        <path key={s.id} d={arcPath(s)} fill={SVG_COLOR[s.pose]} stroke={s.id === selectedId ? '#001435' : 'none'}
           strokeWidth={1} onClick={() => onSelect(s.id)} style={{ cursor: 'pointer' }} />
       ))}
     </svg>

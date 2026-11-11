@@ -12,14 +12,14 @@ const R_IN = 1.02;
 const R_OUT = 1.62;
 const HEIGHT = 0.26;
 
-// Data hues from the style sheet: ink for paid, the accent for held, red for returned, amber for a failed check.
+// PayPal palette: blue for held, navy for paid out, red for returned, amber for a failed check.
 const POSE_COLOR: Record<Pose, string> = {
-  held: '#4a8ad6',
-  checking: '#7fb0ea',
-  failed: '#d9a441',
-  released: '#f2f2f3',
-  returned: '#e5566f',
-  unfunded: '#3a3a3e',
+  held: '#0070e0',
+  checking: '#5aa2ff',
+  failed: '#e8a33d',
+  released: '#003087',
+  returned: '#d9363e',
+  unfunded: '#c5ccd6',
 };
 
 function sectorGeometry(start: number, end: number) {
@@ -95,7 +95,7 @@ function SegmentMesh({ seg, selected, hovered, reduced, onSelect, onHover }: Seg
         onPointerOut={() => { onHover(null); document.body.style.cursor = ''; }}
       >
         <meshStandardMaterial ref={mat} color={POSE_COLOR[seg.pose]} roughness={0.55} metalness={0.15} />
-        {(selected || hovered) && <Edges threshold={20} color={selected ? '#4a8ad6' : '#8a8c92'} />}
+        {(selected || hovered) && <Edges threshold={20} color={selected ? '#001435' : '#5c6b80'} />}
       </mesh>
     </group>
   );
@@ -114,14 +114,14 @@ function VaultBody() {
       {/* the vault floor the held segments rest in */}
       <mesh position={[0, -0.09, 0]}>
         <cylinderGeometry args={[1.9, 1.95, 0.18, 96]} />
-        <meshStandardMaterial color="#1d1c21" roughness={0.9} />
+        <meshStandardMaterial color="#e3e8ef" roughness={0.9} />
       </mesh>
       <mesh position={[0, 0.0, 0]} rotation-x={-Math.PI / 2}>
         <circleGeometry args={[0.92, 64]} />
-        <meshStandardMaterial color="#131217" roughness={1} />
+        <meshStandardMaterial color="#f5f7fa" roughness={1} />
       </mesh>
       <lineLoop geometry={ring}>
-        <lineBasicMaterial color="#3a3a3e" />
+        <lineBasicMaterial color="#c5ccd6" />
       </lineLoop>
     </group>
   );
@@ -147,7 +147,7 @@ export default function Vault3D({ segments, selectedId, hoveredId, onSelect, onH
       aria-hidden="true"
     >
       <ambientLight intensity={0.55} />
-      <hemisphereLight args={['#ffffff', '#131217', 0.6]} />
+      <hemisphereLight args={['#ffffff', '#c9d3e0', 0.7]} />
       <directionalLight position={[3, 5, 2]} intensity={1.6} />
       <directionalLight position={[-4, 2, -3]} intensity={0.35} />
       <group rotation-y={0}>

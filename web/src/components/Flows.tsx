@@ -1,5 +1,5 @@
 // AG Charts: where every escrowed dollar went, per contract (held, paid out, returned), drawn to the
-// terminal style: ink for paid, accent for held, red for returned, no gridline clutter.
+// PayPal palette: navy for paid, blue for held, red for returned, no gridline clutter.
 import { useMemo } from 'react';
 import { AgCharts } from 'ag-charts-react';
 import type { AgChartOptions } from 'ag-charts-community';
@@ -19,19 +19,19 @@ export function Flows({ contracts }: { contracts: Contract[] }) {
       returned: cents(c.totals.returned) / 100,
     })),
     series: [
-      { type: 'bar', direction: 'horizontal', xKey: 'contract', yKey: 'paid', yName: 'Paid out', stacked: true, fill: '#f2f2f3', strokeWidth: 0 },
-      { type: 'bar', direction: 'horizontal', xKey: 'contract', yKey: 'held', yName: 'Held', stacked: true, fill: '#4a8ad6', strokeWidth: 0 },
-      { type: 'bar', direction: 'horizontal', xKey: 'contract', yKey: 'returned', yName: 'Returned', stacked: true, fill: '#e5566f', strokeWidth: 0 },
+      { type: 'bar', direction: 'horizontal', xKey: 'contract', yKey: 'paid', yName: 'Paid out', stacked: true, fill: '#003087', strokeWidth: 0 },
+      { type: 'bar', direction: 'horizontal', xKey: 'contract', yKey: 'held', yName: 'Held', stacked: true, fill: '#0070e0', strokeWidth: 0 },
+      { type: 'bar', direction: 'horizontal', xKey: 'contract', yKey: 'returned', yName: 'Returned', stacked: true, fill: '#d9363e', strokeWidth: 0 },
     ],
     axes: {
-      x: { type: 'category', position: 'left', label: { color: '#8a8c92', fontSize: 12, fontFamily: 'Public Sans' }, line: { enabled: false } },
+      x: { type: 'category', position: 'left', label: { color: '#5c6b80', fontSize: 12, fontFamily: 'Public Sans' }, line: { enabled: false } },
       y: {
         type: 'number', position: 'bottom',
-        label: { color: '#8a8c92', fontSize: 12, fontFamily: 'Public Sans', formatter: ({ value }: { value: number }) => `$${value}` },
-        gridLine: { style: [{ stroke: '#222224', lineDash: [] }] },
+        label: { color: '#5c6b80', fontSize: 12, fontFamily: 'Public Sans', formatter: ({ value }: { value: number }) => `$${value}` },
+        gridLine: { style: [{ stroke: '#e6eaf0', lineDash: [] }] },
       },
     },
-    legend: { position: 'top', item: { label: { color: '#bdbdc0', fontSize: 12, fontFamily: 'Public Sans' }, marker: { shape: 'square', size: 8 } } },
+    legend: { position: 'top', item: { label: { color: '#2c3e55', fontSize: 12, fontFamily: 'Public Sans' }, marker: { shape: 'square', size: 8 } } },
   }) as AgChartOptions, [contracts]);
 
   return (

@@ -19,9 +19,9 @@ function Mark() {
   // The vault seen from above: three segments, one lifted out (paid).
   return (
     <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
-      <path d="M16 4a12 12 0 0 1 11.6 9H22a6 6 0 0 0-6-3.6z" fill="#f2f2f3" transform="translate(1.2 -1.2)" />
-      <path d="M27.6 15A12 12 0 0 1 9 26.4l2.9-4.9A6 6 0 0 0 22 15z" fill="#4a8ad6" />
-      <path d="M7.4 25.3A12 12 0 0 1 14 4.1V10a6 6 0 0 0-3.7 10.4z" fill="#3a3a3e" />
+      <path d="M16 4a12 12 0 0 1 11.6 9H22a6 6 0 0 0-6-3.6z" fill="#ffffff" transform="translate(1.2 -1.2)" />
+      <path d="M27.6 15A12 12 0 0 1 9 26.4l2.9-4.9A6 6 0 0 0 22 15z" fill="#5aa2ff" />
+      <path d="M7.4 25.3A12 12 0 0 1 14 4.1V10a6 6 0 0 0-3.7 10.4z" fill="rgba(255,255,255,.45)" />
     </svg>
   );
 }

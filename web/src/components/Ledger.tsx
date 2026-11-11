@@ -76,7 +76,7 @@ export function Ledger({ contracts, onOpen }: { contracts: Contract[]; onOpen: (
           <button className="btn btn-sm" onClick={exportJson}>JSON</button>
         </div>
       </header>
-      <div className="ag-theme-quartz-dark pactpay-grid">
+      <div className="ag-theme-quartz pactpay-grid">
         <AgGridReact<Row>
           ref={grid}
           rowData={rows}
