@@ -25,7 +25,13 @@ function Sheet({ open, title, onClose, children, wide }: { open: boolean; title:
 }
 
 const BLANK: DraftMilestone = { title: '', amount: '', check_type: 'github_ci', check_config: { repo: '' }, acceptance: '' };
-const toLocal = (iso?: string) => (iso ? new Date(iso).toISOString().slice(0, 16) : '');
+// <input type="datetime-local"> wants local wall-clock time; toISOString() would show UTC and shift on save.
+const toLocal = (iso?: string) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
 
 export function DraftDialog({ open, onClose, onCreated, onError }: {
   open: boolean; onClose: () => void; onCreated: (c: Contract) => void; onError: (m: string) => void;

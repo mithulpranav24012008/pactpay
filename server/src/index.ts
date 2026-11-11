@@ -64,20 +64,22 @@ const AMOUNT = /^\d+(\.\d{1,2})?$/;
 
 app.post("/api/contracts", (req, res) => {
   const body = CreateContract.parse(req.body);
+  const currency = (body.currency || "USD").trim().toUpperCase();
+  if (!/^[A-Z]{3}$/.test(currency)) return res.status(400).json({ error: `"${body.currency}" is not a currency code like USD` });
   const bad = body.milestones.find((m) => !AMOUNT.test(m.amount.trim()) || cents(m.amount) <= 0);
   if (bad) return res.status(400).json({ error: `Milestone "${bad.title}" needs a positive amount like 50 or 49.99 (got "${bad.amount}")` });
   const id = `ct_${randomUUID().slice(0, 8)}`;
   const total = body.milestones.reduce((s, m) => s + cents(m.amount), 0);
   db.prepare(`INSERT INTO contracts (id, title, description, client_name, worker_name, worker_paypal_email, currency, total, created_via)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run(id, body.title, body.description, body.client_name, body.worker_name, body.worker_paypal_email, body.currency || "USD", money(total), body.created_via ?? "web");
+    .run(id, body.title, body.description, body.client_name, body.worker_name, body.worker_paypal_email, currency, money(total), body.created_via ?? "web");
   body.milestones.forEach((m, i) => {
     db.prepare(`INSERT INTO milestones (id, contract_id, position, title, amount, check_type, check_config, due_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
       .run(`ms_${randomUUID().slice(0, 8)}`, id, i + 1, m.title, money(cents(m.amount)), m.check_type,
         JSON.stringify({ ...m.check_config, acceptance: m.acceptance }), m.due_at ? new Date(m.due_at).toISOString() : null);
   });
-  logEvent(id, "created", `Contract drafted: ${body.milestones.length} milestones, ${money(total)} ${body.currency || "USD"}`);
+  logEvent(id, "created", `Contract drafted: ${body.milestones.length} milestones, ${money(total)} ${currency}`);
   res.status(201).json(contractView(id));
 });
 
@@ -170,7 +172,15 @@ async function finishIfDone(contractId: string, settledByReject: boolean) {
   const ms = listMilestones(contractId);
   if (!ms.every((m) => ["released", "rejected"].includes(m.status))) return;
   const c = getContract(contractId)!;
-  if (settledByReject && c.authorization_id) {
+  // A reject and a release can settle at the same moment, so the last capture may not have been the
+  // final one. Whenever any share was rejected, ask PayPal whether money is still held and void it.
+  let stillHeld = settledByReject;
+  if (ms.some((m) => m.status === "rejected") && c.authorization_id) {
+    try {
+      stillHeld = ["CREATED", "PARTIALLY_CAPTURED", "PENDING"].includes(await paypal.authorizationStatus(c.authorization_id));
+    } catch { /* fall back to how this contract closed */ }
+  }
+  if (stillHeld && c.authorization_id) {
     try {
       await paypal.voidAuthorization(c.authorization_id);
       logEvent(contractId, "voided", "Remaining held funds released back to the client");
@@ -200,7 +210,12 @@ app.post("/api/milestones/:id/submit", async (req, res) => {
 async function verifyMilestone(id: string) {
   const m = getMilestone(id)!;
   setMilestone(id, { status: "verifying" });
-  const result = await runCheck(m.check_type, m.check_config, m.submission ?? "");
+  let result: Awaited<ReturnType<typeof runCheck>>;
+  try {
+    result = await runCheck(m.check_type, m.check_config, m.submission ?? "");
+  } catch (e) {
+    result = { passed: false, summary: `The check could not run: ${(e as Error).message}`, evidence: null };
+  }
   const explanation = await explainCheck(m.title, result.passed, result.summary, result.evidence);
   setMilestone(id, {
     status: result.passed ? "passed" : "failed",
@@ -344,7 +359,7 @@ async function sweep() {
   const now = new Date().toISOString();
   const overdue = db.prepare(`SELECT m.* FROM milestones m JOIN contracts c ON c.id = m.contract_id
     WHERE c.status = 'funded' AND m.due_at IS NOT NULL AND m.due_at < ?
-      AND m.status NOT IN ('released', 'rejected') AND m.capture_id IS NULL`).all(now) as unknown as Milestone[];
+      AND m.status NOT IN ('released', 'rejected', 'passed', 'verifying') AND m.capture_id IS NULL`).all(now) as unknown as Milestone[];
   for (const m of overdue) {
     if (busy.has(m.id)) continue;
     busy.add(m.id);
@@ -382,6 +397,9 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
   console.error(err);
   res.status(500).json({ error: (err as Error).message ?? "internal error" });
 });
+
+// A check interrupted by a restart would otherwise show "Checking…" forever.
+db.prepare("UPDATE milestones SET status = 'submitted' WHERE status = 'verifying'").run();
 
 const port = Number(process.env.PORT ?? 4000);
 app.listen(port, () => console.log(`PactPay API on http://localhost:${port}`));

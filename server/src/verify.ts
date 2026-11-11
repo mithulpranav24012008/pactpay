@@ -56,12 +56,31 @@ export async function checkGithubCi(prUrl: string, cfg: { require_merged?: boole
 }
 
 /** Passes when the deployed URL answers with the expected status (and text, if set). */
+/** Only public http(s) addresses: a worker's submission must not make the server probe its own network. */
+function publicUrl(raw: string): URL | null {
+  let u: URL;
+  try { u = new URL(raw); } catch { return null; }
+  if (!["http:", "https:"].includes(u.protocol)) return null;
+  const h = u.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".local") || h === "0.0.0.0" || h === "::1") return null;
+  if (/^(127|10)\./.test(h) || /^192\.168\./.test(h) || /^169\.254\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h)) return null;
+  if (/^(fc|fd|fe80)/.test(h) && h.includes(":")) return null;
+  return u;
+}
+
 export async function checkHttp(url: string, cfg: { expect_status?: number; expect_text?: string }): Promise<CheckResult> {
+  if (!publicUrl(url)) return { passed: false, summary: `${url || "(no URL)"} is not a public http(s) address`, evidence: { url } };
   const expectStatus = cfg.expect_status ?? 200;
   const started = Date.now();
   try {
     new URL(url); // validate URL syntax
-    const res = await fetch(url, { signal: AbortSignal.timeout(10_000), redirect: "follow" });
+    // Follow redirects by hand so a public URL cannot bounce the check onto a private address.
+    let res = await fetch(url, { signal: AbortSignal.timeout(10_000), redirect: "manual" });
+    for (let hop = 0; hop < 3 && res.status >= 300 && res.status < 400 && res.headers.get("location"); hop++) {
+      const next = new URL(res.headers.get("location")!, url).toString();
+      if (!publicUrl(next)) return { passed: false, summary: `${url} redirects to a non-public address`, evidence: { url, location: next } };
+      res = await fetch(next, { signal: AbortSignal.timeout(10_000), redirect: "manual" });
+    }
     const body = await res.text();
     const evidence = { url, status: res.status, ms: Date.now() - started, bodyPreview: body.slice(0, 300) };
     if (res.status !== expectStatus) return { passed: false, summary: `Expected HTTP ${expectStatus}, got ${res.status}`, evidence };
@@ -81,6 +100,6 @@ export async function runCheck(type: string, configJson: any, submission: string
     cfg = {};
   }
   if (type === "github_ci") return checkGithubCi(submission, cfg);
-  if (type === "http") return checkHttp(cfg.url ?? submission, cfg);
+  if (type === "http") return checkHttp(cfg.url || submission, cfg);
   return { passed: false, summary: "Manual milestone: waiting for the client to approve", evidence: { submission } };
 }

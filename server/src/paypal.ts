@@ -126,6 +126,12 @@ export async function captureMilestone(authorizationId: string, currency: string
   return { captureId: res.id ?? "", status: String(res.status) };
 }
 
+/** What is left on a hold: CREATED / PARTIALLY_CAPTURED still hold money; CAPTURED / VOIDED / EXPIRED do not. */
+export async function authorizationStatus(authorizationId: string) {
+  const a = await viaSdk("get authorization", () => controllers().payments.getAuthorizedPayment({ authorizationId }));
+  return String(a.status ?? "UNKNOWN");
+}
+
 /** Release whatever is still held back to the client. */
 export async function voidAuthorization(authorizationId: string) {
   await viaSdk("void", () => controllers().payments.voidPayment({ authorizationId, paypalRequestId: `void-${authorizationId}` }));

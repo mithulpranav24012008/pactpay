@@ -63,6 +63,8 @@ function SegmentMesh({ seg, selected, hovered, reduced, onSelect, onHover }: Seg
 
   // Wake the loop whenever the pose (or hover) changes; useFrame keeps invalidating until settled.
   useEffect(() => { invalidate(); }, [seg.pose, hovered, selected, invalidate]);
+  // A segment that unmounts while hovered must not leave the page with a pointer cursor.
+  useEffect(() => () => { document.body.style.cursor = ''; }, []);
 
   useFrame((_, delta) => {
     const g = ref.current, m = mat.current;
