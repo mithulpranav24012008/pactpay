@@ -1,11 +1,17 @@
-# PactPay: Autonomous Milestone Escrow & Deliverable Verification
+# PactPay: escrow that pays when the work is proven
 
-> **PayPal AI Hackathon 2026**  
-> *Target Categories: Grand Prize | Best Use of Agentic Commerce ($5,000) | AG Grid Sponsor Prize ($5,000)*
+> **PayPal AI Hackathon 2026** · Agentic Commerce · PayPal + AI · AG Grid
+
+Milestone escrow on PayPal for people and AI agents. The client's money is **held** (PayPal authorization), each milestone is
+**released only when a machine-checkable test passes** (CI on a pull request, or a URL that answers), and anything not earned
+goes back to the client. Gemini drafts contracts and explains results; **it never decides whether money moves.**
+
+![PactPay dashboard: the 3D escrow vault, milestones, ledger and money-flow chart](docs/screenshot.png)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![AG Grid](https://img.shields.io/badge/AG%20Grid-v31.0-brightgreen.svg)](https://www.ag-grid.com/)
-[![PayPal Developer](https://img.shields.io/badge/PayPal-Sandbox%20Orders%20%26%20Payouts-blue)](https://developer.paypal.com/)
+[![PayPal Server SDK](https://img.shields.io/badge/PayPal-Server%20SDK%20%2B%20Payouts-003087)](https://developer.paypal.com/)
+[![AG Grid](https://img.shields.io/badge/AG%20Grid%20%2B%20AG%20Charts-community-0070e0)](https://www.ag-grid.com/)
+[![MCP](https://img.shields.io/badge/MCP-agent%20tools-2c3e55)](#-for-ai-agents-pactpay-mcp-server)
 
 ---
 
@@ -27,7 +33,9 @@ However, **bilateral financial trust is broken**:
 3. **Deterministic & Automated Milestone Verification:** When a worker submits a deliverable (such as a GitHub Pull Request or deployed endpoint URL), PactPay executes automated deterministic verification checks (CI green checks or HTTP probes). **The AI never arbitrarily decides whether money moves — deterministic checks do.**
 4. **Programmatic Payouts:** Upon successful verification, PactPay captures that milestone's tranche and programmatically pays the worker via the **PayPal Payouts API**.
 5. **Human-in-the-Loop Override:** If an automated check fails, funds remain held, Gemini explains the result in plain words to both sides, and the client can release anyway or reject the milestone (that share is returned by voiding the remaining authorization).
-6. **Interactive Telemetry Dashboard (AG Grid):** A high-performance real-time telemetry console built with **AG Grid**, allowing clients and arbitrators to inspect contract states, live milestone tranches, and verification logs.
+6. **Deadlines and confirmed payouts:** a milestone that misses its deadline is refunded automatically, and every payout is followed until PayPal confirms it.
+7. **AI agents as clients:** an MCP server lets any agent draft, create and fund (via a human-approved PayPal link) a contract, submit work and watch it get paid.
+8. **A dashboard that shows where every dollar is:** a live 3D escrow vault, an AG Grid ledger, AG Charts and a full audit trail.
 
 ---
 
@@ -79,16 +87,12 @@ All four paths were run end to end against the live PayPal sandbox:
 | Reject and refund | Milestone URL returns 404, client rejects, remaining authorization voided, $20 returned |
 | Agent via MCP + deadline | Contract created and funded through the MCP server; PR passed, $12 paid (PayPal confirmed SUCCESS); second milestone missed its deadline, $8 returned automatically |
 
-## 📊 AG Grid & AG Charts Sponsor Features
-PactPay's telemetry dashboard utilizes both **AG Grid** and **AG Charts** (`ag-charts-community` / `ag-charts-react`) to provide institutional-grade financial monitoring:
-- **Executive KPI Aggregation Bar:** Live portfolio metrics above the matrix (Total Escrow Volume, Currently Held in Escrow, Paid Out, and % Agentic Escrows).
-- **Interactive Visual Telemetry (AG Charts):**
-  - **Capital Allocation Breakdown:** Multi-series bar chart visualizing held vs paid vs refunded liquidity across contracts.
-  - **Settlement Distribution:** Donut chart categorizing milestone outcomes (Paid & Settled, Active, Refunded, Disputed).
-- **Interactive Contract Matrix (AG Grid):**
-  - **Fulfillment Progress Cell Renderer:** Real-time visual progress bar showing % of escrow settled per contract.
-  - **Preset Filter Chips:** Instant matrix segmentation (`All`, `⚡ Agent (MCP)`, `Funded`, `Awaiting`, `Completed`).
-  - **Quick Search & Dual Audit Export:** Full-text filtering and instant one-click CSV and JSON export for accounting and compliance.
+## 📊 The dashboard (React Three Fiber · AG Grid · AG Charts)
+- **3D escrow vault** (React Three Fiber, rendered only while something moves): each milestone is a ring segment sized by its amount. Held sits in the vault in PayPal blue, a failed check turns amber, paid lifts out in navy, refunded slides away in red. Drag to rotate; click a segment to open that milestone. Falls back to a flat ring without WebGL.
+- **AG Grid ledger:** every milestone across every contract (money location, check, amount, deadline, PayPal payout status) with quick search and one-click **CSV and JSON export**; click a row to open it.
+- **AG Charts:** "Where the money went", stacked per contract into paid out, held and returned.
+- **What needs you:** the line under the title names the one thing to act on (a failed check, the next deadline, an unfunded contract).
+- **Dialogs** for drafting with Gemini, overriding a milestone, and asking the AI arbitrator (advisory only).
 
 ---
 

@@ -13,3 +13,4 @@ venv/
 graphify-out
 pactpay_state.json
 .taste-skill/
+server/pactpay.backup-*.db*
