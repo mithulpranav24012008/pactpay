@@ -53,6 +53,7 @@ export function Milestones({ contract, selectedId, hoveredId, onSelect, onHover,
         const overdue = due?.startsWith('overdue');
         const value = drafts[m.id] ?? m.submission ?? '';
         const working = busy === m.id || m.status === 'verifying';
+        const fixedUrl = m.check_type === 'http' && typeof m.check_config?.url === 'string' && m.check_config.url.trim() ? m.check_config.url.trim() : '';
         return (
           <li
             key={m.id}
@@ -92,11 +93,18 @@ export function Milestones({ contract, selectedId, hoveredId, onSelect, onHover,
                 className="ms-actions"
                 onSubmit={(e) => {
                   e.preventDefault();
+                  if (fixedUrl) return run(m.id, () => api.submit(m.id, fixedUrl));
                   if (!value.trim()) return onError(m.check_type === 'github_ci' ? 'Paste the pull request URL first.' : 'Paste the URL first.');
                   run(m.id, () => api.submit(m.id, value.trim()));
                 }}
               >
-                {m.check_type !== 'manual' && !m.capture_id && (
+                {fixedUrl && !m.capture_id && (
+                  // The contract fixes the URL, so the server checks that one; don't ask for another.
+                  <button className="btn btn-primary" disabled={working} type="submit">
+                    {working ? 'Checking…' : m.submission ? 'Check the URL again' : 'Check the live URL'}
+                  </button>
+                )}
+                {m.check_type !== 'manual' && !fixedUrl && !m.capture_id && (
                   <>
                     <label className="sr-only" htmlFor={`sub-${m.id}`}>
                       {m.check_type === 'github_ci' ? 'Pull request URL' : 'Deployed URL'} for {m.title}

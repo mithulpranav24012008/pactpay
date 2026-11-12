@@ -19,13 +19,14 @@ async function generate(system: string, prompt: string, jsonSchema?: unknown): P
   // answer or an error well before they give up, however many models and keys are tried.
   const deadline = Date.now() + 45_000;
   for (const model of MODELS) {
-    if (Date.now() > deadline) break;
+    if (deadline - Date.now() < 10_000) break;
     for (let attempt = 0; attempt < KEYS.length; attempt++) {
-      if (Date.now() > deadline) break;
+      // Gemini rejects request deadlines under 10 s, so stop rather than send one that short.
+      if (deadline - Date.now() < 10_000) break;
       const ai = new GoogleGenAI({
         apiKey: KEYS[keyIndex],
         apiVersion: "v1beta",
-        httpOptions: { timeout: Math.max(5_000, Math.min(25_000, deadline - Date.now())), retryOptions: { attempts: 1 } }, // we do our own fallback
+        httpOptions: { timeout: Math.min(25_000, deadline - Date.now()), retryOptions: { attempts: 1 } }, // we do our own fallback
       });
       try {
         const res = await ai.models.generateContent({
